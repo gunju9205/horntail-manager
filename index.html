@@ -3,7 +3,7 @@
   <head>
     <base target="_top">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>혼테일 공대 관리</title>
+    <title>혼테일 공대 관리 플랫폼</title>
     
     <style>
       /* --- [기본 설정] --- */
@@ -17,11 +17,44 @@
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
 
+      /* --- [로비 (공대 선택)] --- */
+      #lobby-view {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: #f0f2f5; z-index: 10000;
+        display: flex; flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box;
+        overflow-y: auto;
+      }
+      .lobby-header { text-align: center; margin-top: 40px; margin-bottom: 30px; }
+      .lobby-title { font-size: 28px; font-weight: 800; color: #2c3e50; letter-spacing: -1px; margin-bottom: 5px; }
+      .lobby-sub { font-size: 14px; color: #7f8c8d; }
+      
+      .channel-list { 
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; 
+        width: 100%; max-width: 900px; 
+      }
+      .channel-card {
+        background: #fff; border-radius: 16px; padding: 20px; 
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eee;
+        transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;
+        display: flex; flex-direction: column; justify-content: space-between;
+        min-height: 120px;
+      }
+      .channel-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-color: #ff6b00; }
+      .ch-name { font-size: 18px; font-weight: 800; color: #333; margin-bottom: 5px; }
+      .ch-info { font-size: 12px; color: #999; }
+      .ch-lock { margin-top: 15px; display: flex; justify-content: flex-end; align-items: center; font-size: 12px; color: #ff6b00; font-weight: bold; }
+      
+      .create-card {
+        background: #fdfdfd; border: 2px dashed #ddd; display: flex; align-items: center; justify-content: center;
+        color: #999; font-weight: bold; flex-direction: column; gap: 8px;
+      }
+      .create-card:hover { border-color: #ff6b00; color: #ff6b00; background: #fffcf9; }
+
       /* --- [로그인] --- */
       #login-view {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background-color: #f0f2f5; z-index: 9999;
-        display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+        background-color: #f0f2f5; z-index: 9999; display: none; /* 기본 숨김 */
+        flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
       }
       .login-card {
         background: #ffffff; padding: 40px 30px; border-radius: 20px;
@@ -38,6 +71,7 @@
         font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background 0.2s;
       }
       .login-btn:hover { background-color: #e65c00; }
+      .back-to-lobby { margin-top: 15px; color: #999; font-size: 13px; text-decoration: underline; cursor: pointer; }
 
       /* --- [메인 레이아웃] --- */
       #main-app { display: none; max-width: 1200px; margin: 0 auto; padding: 20px; box-sizing: border-box; min-height: 100%; padding-bottom: 50px; }
@@ -50,16 +84,13 @@
       .user-info { font-weight: 600; color: #555; display: flex; align-items: center; gap: 12px; font-size: 14px; }
       .logout-link { font-size: 12px; color: #999; text-decoration: underline; cursor: pointer; }
 
-      /* 반응형 그리드 */
       .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 20px; }
       @media (min-width: 900px) { .dashboard-grid { grid-template-columns: 320px 1fr; } }
-
-      /* 모바일 최적화 CSS */
       @media (max-width: 600px) {
         #main-app { padding: 10px; padding-bottom: 60px; }
         .header-area { flex-direction: column; align-items: flex-start; gap: 10px; padding: 15px; }
         .user-info { width: 100%; justify-content: space-between; border-top: 1px solid #eee; padding-top: 10px; margin-top: 5px; }
-        .right-panel { grid-template-columns: repeat(2, 1fr); gap: 10px; } /* 모바일에서 메뉴 2열 유지 */
+        .right-panel { grid-template-columns: repeat(2, 1fr); gap: 10px; } 
         .modal-card { width: 95%; max-height: 90vh; padding: 15px; }
         .party-row { flex-direction: column; align-items: stretch; gap: 10px; text-align: center; }
         .form-row { flex-wrap: wrap; }
@@ -146,7 +177,7 @@
 
       /* 테이블 모바일 대응 (스크롤) */
       .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 10px; border: 1px solid #eee; border-radius: 8px; }
-      .record-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 0; min-width: 500px; /* 최소 너비 지정으로 스크롤 유도 */ }
+      .record-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 0; min-width: 500px; }
       .record-table th { background: #f8f9fa; padding: 10px 8px; text-align: center; border-bottom: 1px solid #ddd; font-weight: 600; color: #555; white-space: nowrap;}
       .record-table td { padding: 10px 8px; border-bottom: 1px solid #eee; text-align: center; color: #333; vertical-align: middle; }
       .record-empty { text-align: center; padding: 20px; color: #aaa; font-style: italic; }
@@ -233,21 +264,39 @@
   </head>
   <body>
 
-    <!-- [1] 로그인 -->
-    <div id="login-view">
-      <div class="login-card tilt-card" data-tilt>
-        <div class="login-title">🍁 시대 길드<br><span style="font-size:18px; color:#555; font-weight:500;">혼테일 공대 로그인</span></div>
-        <input type="text" id="login-nick" class="login-input" placeholder="캐릭터명 (관리자는 '관리자')">
-        <input type="password" id="login-pw" class="login-input" placeholder="비밀번호 입력" onkeypress="handleEnter(event)">
-        <button class="login-btn" onclick="tryLogin()">접속하기</button>
+    <!-- [0] 로비 (채널 선택) -->
+    <div id="lobby-view">
+      <div class="lobby-header">
+        <div class="lobby-title">메이플스토리 공대 관리</div>
+        <div class="lobby-sub">함께하는 즐거움, 편리한 정산</div>
+      </div>
+      
+      <div id="channel-list" class="channel-list">
+        <!-- 채널 카드들이 여기에 로드됩니다 -->
+      </div>
+      
+      <div class="channel-card create-card" onclick="openCreateModal()">
+        <span style="font-size:30px;">+</span>
+        <span>새로운 공대 만들기</span>
       </div>
     </div>
 
-    <!-- [2] 메인 앱 -->
+    <!-- [1] 로그인 -->
+    <div id="login-view">
+      <div class="login-card tilt-card" data-tilt>
+        <div class="login-title" id="login-channel-name">공대 로그인</div>
+        <input type="text" id="login-nick" class="login-input" placeholder="캐릭터명 (관리자는 '관리자')">
+        <input type="password" id="login-pw" class="login-input" placeholder="비밀번호 입력" onkeypress="handleEnter(event)">
+        <button class="login-btn" onclick="tryLogin()">접속하기</button>
+        <div class="back-to-lobby" onclick="location.reload()">← 다른 공대 선택하기</div>
+      </div>
+    </div>
+
+    <!-- [2] 메인 앱 (기존과 동일) -->
     <div id="main-app">
       <div class="header-area">
         <div class="header-title">
-          <h1>시대 길드 <span class="subtitle">혼테일 공대</span></h1>
+          <h1><span id="app-guild-name">시대 길드</span> <span class="subtitle">공대 관리 시스템</span></h1>
         </div>
         <div class="user-info">
           <span id="role-badge" style="font-size:11px; padding:2px 6px; border-radius:4px; margin-right:5px; color:white; font-weight:bold;"></span>
@@ -315,6 +364,31 @@
       </div>
     </div>
 
+    <!-- 모달: 공대 생성 전용 -->
+    <div id="create-channel-modal" class="modal-overlay" onclick="if(event.target.id==='create-channel-modal') this.style.display='none'">
+      <div class="modal-card" style="max-width:400px;">
+        <div class="modal-header">
+          <span class="modal-title">✨ 새로운 공대 생성</span>
+          <button class="close-btn" onclick="document.getElementById('create-channel-modal').style.display='none'">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">공대 이름</label>
+            <input type="text" id="new-ch-name" class="form-control" placeholder="예: 무적공대">
+          </div>
+          <div class="form-group">
+            <label class="form-label">채널 접속 비밀번호</label>
+            <input type="text" id="new-ch-pw" class="form-control" placeholder="공대원들에게 공유할 비번">
+          </div>
+          <div class="form-group" style="margin-top:20px; border-top:1px dashed #ddd; padding-top:10px;">
+            <label class="form-label" style="color:#ff6b00;">🔐 마스터 키 (생성 승인용)</label>
+            <input type="password" id="master-key-input" class="form-control" placeholder="관리자 승인 암호">
+          </div>
+          <button class="form-submit-btn" onclick="createNewChannel()">공대 생성하기</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 모달: 파티 편성 전용 -->
     <div id="add-member-modal" class="modal-overlay" onclick="closeAddModal(event)">
       <div class="modal-card" style="max-width:600px;">
@@ -377,9 +451,11 @@
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
       import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-      import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+      import { getFirestore, doc, setDoc, getDocs, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-      // --- [Firebase Config] ---
+      // =========================================================================
+      // [Firebase 설정]
+      // =========================================================================
       const myFirebaseConfig = {
         apiKey: "AIzaSyAUdwSO5XwI6xODntL2aypZEUShW0kVThI",
         authDomain: "sidae-guild-horntail.firebaseapp.com",
@@ -388,17 +464,26 @@
         messagingSenderId: "494207905469",
         appId: "1:494207905469:web:bfacf66949995eaa6391d4"
       };
-      const myAppId = "sidae-horntail-manager";
+      
+      // [중요] 공대 생성 승인용 마스터 키 (원하는 암호로 변경하세요)
+      const MASTER_CREATION_KEY = "admin1234"; 
+      
+      const ROOT_APP_ID = "raid-platform-v1"; // 플랫폼 ID (고정)
+      // =========================================================================
 
       window.sysConfig = { pwAdmin: '9999', pwMember: '0000', pwGuest: '7777' };
       window.currentUser = "";
       window.userRole = "";
       window.isAdmin = false;
-      window.appData = { channel: [], entry: [], guest: [], loot: [], leaves: [], distribution: [], payouts: [], reviews: [] };
+      window.currentChannelId = ""; // 현재 접속중인 공대 ID
+      
+      // 앱 데이터 초기값
+      const initialAppData = { channel: [], entry: [], guest: [], loot: [], leaves: [], distribution: [], payouts: [], reviews: [] };
+      window.appData = JSON.parse(JSON.stringify(initialAppData));
       window.localMembers = [];
       window.allMembers = [];
       window.selectedNicks = [];
-      window.selectedDistMembers = []; // 분배 대상 선택용
+      window.selectedDistMembers = [];
 
       let db, auth;
 
@@ -407,11 +492,99 @@
         auth = getAuth(app);
         db = getFirestore(app);
         await signInAnonymously(auth);
-        onAuthStateChanged(auth, (user) => { if(user) setupListener(); });
+        onAuthStateChanged(auth, (user) => { 
+          if(user) {
+            loadChannelList(); // 로그인 되면 로비 목록 로드
+          }
+        });
       })();
 
-      function setupListener() {
-        const docRef = doc(db, 'artifacts', myAppId, 'public', 'data', 'raid_manager', 'shared_data');
+      // --- [로비 & 채널 로직] ---
+      
+      // 채널 목록 불러오기
+      async function loadChannelList() {
+        const listDiv = document.getElementById('channel-list');
+        listDiv.innerHTML = '<div style="text-align:center; padding:20px;">공대 목록을 불러오는 중...</div>';
+        
+        try {
+          // 'raid_channels' 컬렉션에서 모든 문서 가져오기
+          const querySnapshot = await getDocs(collection(db, 'artifacts', ROOT_APP_ID, 'public', 'data', 'raid_channels'));
+          
+          if(querySnapshot.empty) {
+             listDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">생성된 공대가 없습니다.<br>아래 버튼을 눌러 첫 공대를 만들어보세요!</div>';
+             return;
+          }
+
+          let html = '';
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            html += `
+            <div class="channel-card" onclick="enterChannel('${doc.id}', '${data.password}', '${data.name}')">
+              <div>
+                <div class="ch-name">${data.name}</div>
+                <div class="ch-info">ID: ${doc.id}</div>
+              </div>
+              <div class="ch-lock">🔒 비공개 채널</div>
+            </div>`;
+          });
+          listDiv.innerHTML = html;
+        } catch (e) {
+          console.error(e);
+          listDiv.innerHTML = '목록 로드 실패';
+        }
+      }
+
+      window.openCreateModal = function() {
+        document.getElementById('create-channel-modal').style.display = 'flex';
+      }
+
+      window.createNewChannel = async function() {
+        const name = document.getElementById('new-ch-name').value.trim();
+        const pw = document.getElementById('new-ch-pw').value.trim();
+        const key = document.getElementById('master-key-input').value.trim();
+
+        if(!name || !pw) return alert('공대 이름과 비밀번호를 입력해주세요.');
+        if(key !== MASTER_CREATION_KEY) return alert('마스터 키(승인 암호)가 일치하지 않습니다.\n관리자에게 문의하세요.');
+
+        const newId = 'raid_' + Date.now(); // 유니크 ID 생성
+        
+        try {
+          const docRef = doc(db, 'artifacts', ROOT_APP_ID, 'public', 'data', 'raid_channels', newId);
+          await setDoc(docRef, {
+            name: name,
+            password: pw,
+            // 초기 데이터 세팅
+            records: JSON.stringify(initialAppData),
+            pool: JSON.stringify([]),
+            members: JSON.stringify([])
+          });
+          
+          alert(`[${name}] 공대가 생성되었습니다!\n이제 목록에서 접속할 수 있습니다.`);
+          document.getElementById('create-channel-modal').style.display = 'none';
+          loadChannelList();
+        } catch(e) {
+          alert('생성 실패: ' + e.message);
+        }
+      }
+
+      window.enterChannel = async function(id, truePw, name) {
+        const inputPw = prompt(`[${name}] 공대에 접속하려면\n채널 비밀번호를 입력하세요:`);
+        if(inputPw !== truePw) return alert('비밀번호가 틀렸습니다.');
+
+        window.currentChannelId = id; // 접속한 채널 ID 저장
+        document.getElementById('login-channel-name').innerText = name + " 로그인";
+        document.getElementById('app-guild-name').innerText = name; // 앱 상단 제목 변경
+        
+        // 해당 채널의 데이터 실시간 리스너 연결
+        setupChannelListener(id);
+        
+        // 화면 전환: 로비 -> 로그인
+        document.getElementById('lobby-view').style.display = 'none';
+        document.getElementById('login-view').style.display = 'flex';
+      }
+
+      function setupChannelListener(channelId) {
+        const docRef = doc(db, 'artifacts', ROOT_APP_ID, 'public', 'data', 'raid_channels', channelId);
         onSnapshot(docRef, (snap) => {
           if(snap.exists()){
             const d = snap.data();
@@ -423,13 +596,19 @@
         });
       }
 
+      // --- [저장 로직 (현재 접속한 채널에 저장)] ---
       window.saveAllData = async function() {
-        const docRef = doc(db, 'artifacts', myAppId, 'public', 'data', 'raid_manager', 'shared_data');
+        if(!window.currentChannelId) return;
+        
+        const docRef = doc(db, 'artifacts', ROOT_APP_ID, 'public', 'data', 'raid_channels', window.currentChannelId);
+        // 기존 이름과 비번은 유지하면서 데이터만 업데이트하기 위해 merge 옵션 사용 (하지만 setDoc 구조상 필드만 보내도 됨)
+        // 여기서는 안전하게 전체 구조에 맞춰 업데이트
         await setDoc(docRef, {
           records: JSON.stringify(window.appData),
           pool: JSON.stringify(window.allMembers),
           members: JSON.stringify(window.localMembers)
-        });
+        }, { merge: true }); // merge: true 중요 (이름/비번 날아가지 않게)
+        
         document.getElementById('save-toast').classList.add('show');
         setTimeout(()=>document.getElementById('save-toast').classList.remove('show'), 2000);
       }
@@ -445,500 +624,185 @@
         }
       }
 
-      /* --- [분배금 관리] --- */
+      // --- [기존 기능들 (유지)] ---
+      
+      /* [분배금 관리] */
       window.openDistributionHistory = function() {
         if(!window.appData.distribution) window.appData.distribution = [];
         if(!window.appData.payouts) window.appData.payouts = [];
-        
         const d = getTodayStr();
-        
         let html = `
         <div id="dist-layout" class="dist-layout">
-          <!-- 1. 수입 등록 -->
           <div class="dist-panel">
-            <div class="dist-title">💰 수입 등록 및 자동 계산</div>
+            <div class="dist-title">💰 수입 등록</div>
             ${window.isAdmin ? `
             <div class="form-group">
               <div class="form-row" style="margin-bottom:8px">
                 <input type="date" id="ds-d" class="form-control" value="${d}" style="width:130px">
-                <input type="text" id="ds-item" class="form-control" placeholder="판매 품목 (ex. 혼목)" style="flex:1">
+                <input type="text" id="ds-item" class="form-control" placeholder="품목" style="flex:1">
               </div>
               <div class="form-row" style="margin-bottom:8px">
-                <input type="number" id="ds-amt" class="form-control" placeholder="판매 금액 (메소)" oninput="calcDistFee()" style="flex:1">
+                <input type="number" id="ds-amt" class="form-control" placeholder="금액" oninput="calcDistFee()" style="flex:1">
                 <select id="ds-type" class="form-control" onchange="calcDistFee()" style="width:140px">
-                  <option value="trade">일반거래 (수작X)</option>
-                  <option value="99">99수작 (0.8%)</option>
-                  <option value="499">499수작 (1.8%)</option>
-                  <option value="999">999수작 (3.0%)</option>
-                  <option value="2499">2499수작 (4.0%)</option>
-                  <option value="parcel">택배거래</option>
+                  <option value="trade">일반</option><option value="99">99수작</option><option value="499">499수작</option>
+                  <option value="999">999수작</option><option value="2499">2499수작</option><option value="parcel">택배</option>
                 </select>
               </div>
               <div class="form-row" style="margin-bottom:12px">
-                <label style="font-size:13px; font-weight:bold; color:#555;">순수익(Net):</label>
-                <input type="text" id="ds-net" class="form-control" placeholder="자동 계산됨" readonly style="flex:1; text-align:right; color:#ff6b00; font-weight:bold;">
+                <label style="font-size:13px; font-weight:bold;">순수익:</label>
+                <input type="text" id="ds-net" class="form-control" readonly style="flex:1; text-align:right; font-weight:bold; color:#ff6b00;">
               </div>
-              <label class="form-label">분배 대상 선택 (<span id="sel-count">0</span>명)</label>
+              <label class="form-label">분배 대상 (<span id="sel-count">0</span>명)</label>
               <div id="dist-member-pool" class="dist-member-pool"></div>
-              <button class="form-submit-btn" onclick="addDistIncome()">+ 수입 등록 및 분배</button>
+              <button class="form-submit-btn" onclick="addDistIncome()">등록</button>
             </div>
-            ` : '<div style="text-align:center; color:#999; padding:20px;">관리자만 수입을 등록할 수 있습니다.</div>'}
+            ` : '<div style="text-align:center;color:#999;padding:20px;">관리자 전용</div>'}
           </div>
-
-          <!-- 2. 정산 현황판 -->
           <div class="dist-panel">
-            <div class="dist-title">📊 공대원 정산 현황 (미지급 잔액)</div>
-            <div class="table-wrapper">
-              <table class="record-table">
-                <thead><tr><th>이름</th><th>총 분배액</th><th>지급된 금액</th><th>미지급 잔액</th><th>관리</th></tr></thead>
-                <tbody id="dist-status-tb"></tbody>
-              </table>
-            </div>
+            <div class="dist-title">📊 정산 현황</div>
+            <div class="table-wrapper"><table class="record-table"><thead><tr><th>이름</th><th>총분배</th><th>지급됨</th><th>잔액</th><th>관리</th></tr></thead><tbody id="dist-status-tb"></tbody></table></div>
           </div>
-
-          <!-- 3. 지급(정산) 등록 -->
           <div class="dist-panel">
-            <div class="dist-title">💸 지급 처리 (정산 차감)</div>
+            <div class="dist-title">💸 지급 처리</div>
             ${window.isAdmin ? `
-            <div class="form-group">
-              <div class="form-row">
-                <input type="date" id="pay-d" class="form-control" value="${d}" style="width:130px">
-                <input type="text" id="pay-to" class="form-control" placeholder="대상자" style="width:100px">
-                <input type="number" id="pay-amt" class="form-control" placeholder="지급 금액" style="flex:1">
-                <button class="action-btn btn-edit" style="padding:10px 15px;" onclick="addDistPayout()">지급 확인</button>
-              </div>
-            </div>
-            ` : ''}
-            <div style="font-size:12px; font-weight:bold; margin-top:10px; margin-bottom:5px;">최근 수입/지급 로그</div>
-            <div style="max-height:200px; overflow-y:auto; border:1px solid #eee;">
-              <table class="record-table">
-                <tbody id="dist-log-tb"></tbody>
-              </table>
-            </div>
+            <div class="form-group"><div class="form-row">
+                <input type="date" id="pay-d" class="form-control" value="${d}" style="width:120px">
+                <input type="text" id="pay-to" class="form-control" placeholder="대상" style="width:80px">
+                <input type="number" id="pay-amt" class="form-control" placeholder="금액" style="flex:1">
+                <button class="action-btn btn-edit" onclick="addDistPayout()">지급</button>
+            </div></div>` : ''}
+            <div style="font-size:12px;margin-top:10px;">로그</div>
+            <div style="max-height:200px;overflow-y:auto;border:1px solid #eee;"><table class="record-table"><tbody id="dist-log-tb"></tbody></table></div>
           </div>
         </div>`;
-
-        showContent('💰 분배금 관리 센터', html);
+        showContent('💰 분배금 관리', html);
         if(window.isAdmin) renderDistMemberPool();
         renderDistStatus();
       }
 
       window.calcDistFee = function() {
-        const amt = parseInt(document.getElementById('ds-amt').value) || 0;
-        const type = document.getElementById('ds-type').value;
-        let rate = 0;
-
-        if(type === 'trade') {
-          if(amt >= 100000000) rate = 0.06;
-          else if(amt >= 25000000) rate = 0.05;
-          else if(amt >= 10000000) rate = 0.04;
-          else if(amt >= 5000000) rate = 0.03;
-          else if(amt >= 1000000) rate = 0.018;
-          else if(amt >= 100000) rate = 0.008;
-        } else if(type === 'parcel') {
-          if(amt >= 100000000) rate = 0.07;
-          else if(amt >= 25000000) rate = 0.06;
-          else if(amt >= 10000000) rate = 0.05;
-          else if(amt >= 5000000) rate = 0.04;
-          else if(amt >= 1000000) rate = 0.027;
-          else if(amt >= 100000) rate = 0.012;
-        } else {
-          if(type === '99') rate = 0.008;      
-          else if(type === '499') rate = 0.018; 
-          else if(type === '999') rate = 0.03;  
-          else if(type === '2499') rate = 0.04; 
-        }
-
-        const fee = Math.floor(amt * rate);
-        const net = amt - fee;
-        document.getElementById('ds-net').value = net.toLocaleString();
-        document.getElementById('ds-net').dataset.val = net;
+        const amt = parseInt(document.getElementById('ds-amt').value)||0; const type = document.getElementById('ds-type').value; let rate=0;
+        if(type==='trade'){ if(amt>=100000000)rate=0.06; else if(amt>=25000000)rate=0.05; else if(amt>=10000000)rate=0.04; else if(amt>=5000000)rate=0.03; else if(amt>=1000000)rate=0.018; else if(amt>=100000)rate=0.008; }
+        else if(type==='parcel'){ if(amt>=100000000)rate=0.07; else if(amt>=25000000)rate=0.06; else if(amt>=10000000)rate=0.05; else if(amt>=5000000)rate=0.04; else if(amt>=1000000)rate=0.027; else if(amt>=100000)rate=0.012; }
+        else { if(type==='99')rate=0.008; else if(type==='499')rate=0.018; else if(type==='999')rate=0.03; else if(type==='2499')rate=0.04; }
+        const net = amt - Math.floor(amt*rate);
+        document.getElementById('ds-net').value = net.toLocaleString(); document.getElementById('ds-net').dataset.val = net;
       }
-
       window.renderDistMemberPool = function() {
-        const c = document.getElementById('dist-member-pool');
-        if(!c) return;
-        c.innerHTML = window.allMembers.map(m => {
-          const isSel = window.selectedDistMembers.includes(m.nick);
-          return `<div class="dist-chip ${isSel?'selected':''}" onclick="toggleDistTarget('${m.nick}')">${m.nick}</div>`;
-        }).join('');
+        const c=document.getElementById('dist-member-pool'); if(!c)return;
+        c.innerHTML = window.allMembers.map(m=>`<div class="dist-chip ${window.selectedDistMembers.includes(m.nick)?'selected':''}" onclick="toggleDistTarget('${m.nick}')">${m.nick}</div>`).join('');
         document.getElementById('sel-count').innerText = window.selectedDistMembers.length;
       }
-
-      window.toggleDistTarget = function(nick) {
-        const i = window.selectedDistMembers.indexOf(nick);
-        if(i > -1) window.selectedDistMembers.splice(i, 1);
-        else window.selectedDistMembers.push(nick);
-        renderDistMemberPool();
-      }
-
+      window.toggleDistTarget = function(n) { const i=window.selectedDistMembers.indexOf(n); if(i>-1)window.selectedDistMembers.splice(i,1); else window.selectedDistMembers.push(n); renderDistMemberPool(); }
       window.addDistIncome = function() {
-        const d = document.getElementById('ds-d').value;
-        const item = document.getElementById('ds-item').value;
-        const amt = document.getElementById('ds-amt').value;
-        const netStr = document.getElementById('ds-net').dataset.val;
-        const type = document.getElementById('ds-type').options[document.getElementById('ds-type').selectedIndex].text;
-        
-        if(!item || !amt || !netStr) return alert('판매 정보를 입력해주세요.');
-        if(window.selectedDistMembers.length === 0) return alert('분배 대상을 선택해주세요.');
-
-        const net = parseInt(netStr);
-        window.appData.distribution.unshift({
-          date: d, item: item, amt: amt, net: net, type: type,
-          targets: [...window.selectedDistMembers]
-        });
-        
-        window.selectedDistMembers = [];
-        saveAllData();
-        renderDistMemberPool();
-        renderDistStatus();
-        alert('수입 등록 완료');
+        const d=document.getElementById('ds-d').value, item=document.getElementById('ds-item').value, amt=document.getElementById('ds-amt').value, net=document.getElementById('ds-net').dataset.val;
+        if(!item||!amt) return alert('입력 확인'); if(window.selectedDistMembers.length===0) return alert('대상 선택');
+        window.appData.distribution.unshift({date:d, item:item, amt:amt, net:parseInt(net), targets:[...window.selectedDistMembers]});
+        window.selectedDistMembers=[]; saveAllData(); renderDistMemberPool(); renderDistStatus();
       }
-
       window.addDistPayout = function() {
-        const d = document.getElementById('pay-d').value;
-        const to = document.getElementById('pay-to').value;
-        const amt = document.getElementById('pay-amt').value;
-        
-        if(!to || !amt) return alert('대상과 금액을 확인해주세요.');
-        
-        window.appData.payouts.unshift({
-          date: d, to: to, amt: parseInt(amt)
-        });
-        
-        document.getElementById('pay-amt').value = '';
-        saveAllData();
-        renderDistStatus();
+        const d=document.getElementById('pay-d').value, to=document.getElementById('pay-to').value, amt=document.getElementById('pay-amt').value;
+        if(!to||!amt) return alert('확인');
+        window.appData.payouts.unshift({date:d, to:to, amt:parseInt(amt)}); document.getElementById('pay-amt').value=''; saveAllData(); renderDistStatus();
       }
-
-      window.setPayTarget = function(name, balance) {
-        document.getElementById('pay-to').value = name;
-        document.getElementById('pay-amt').value = balance > 0 ? balance : '';
-      }
-
+      window.setPayTarget = function(n,b) { document.getElementById('pay-to').value=n; document.getElementById('pay-amt').value=b>0?b:''; }
       window.renderDistStatus = function() {
-        const balances = {};
-        window.allMembers.forEach(m => balances[m.nick] = { earned: 0, paid: 0 });
-        
-        window.appData.distribution.forEach(dist => {
-          if(dist.targets && dist.targets.length > 0) {
-            const share = Math.floor(dist.net / dist.targets.length);
-            dist.targets.forEach(nick => {
-              if(!balances[nick]) balances[nick] = { earned: 0, paid: 0 };
-              balances[nick].earned += share;
-            });
-          }
-        });
-
-        window.appData.payouts.forEach(pay => {
-          if(!balances[pay.to]) balances[pay.to] = { earned: 0, paid: 0 };
-          balances[pay.to].paid += pay.amt;
-        });
-
-        const tbody = document.getElementById('dist-status-tb');
-        if(tbody) {
-          let html = '';
-          Object.keys(balances).sort().forEach(nick => {
-            const b = balances[nick];
-            const remain = b.earned - b.paid;
-            if(b.earned === 0 && b.paid === 0) return;
-            
-            const style = remain > 0 ? 'color:#ff6b00; font-weight:bold;' : 'color:#bbb;';
-            const btn = window.isAdmin && remain > 0 ? `<button class="action-btn btn-pay" onclick="setPayTarget('${nick}', ${remain})">정산</button>` : '-';
-            
-            html += `<tr>
-              <td>${nick}</td>
-              <td style="color:#1890ff">+${b.earned.toLocaleString()}</td>
-              <td style="color:#555">-${b.paid.toLocaleString()}</td>
-              <td style="${style}">${remain.toLocaleString()}</td>
-              <td>${btn}</td>
-            </tr>`;
-          });
-          tbody.innerHTML = html || '<tr><td colspan="5" class="record-empty">정산 내역이 없습니다.</td></tr>';
+        const bal={}; window.allMembers.forEach(m=>bal[m.nick]={e:0,p:0});
+        window.appData.distribution.forEach(d=>{ if(d.targets&&d.targets.length){ const s=Math.floor(d.net/d.targets.length); d.targets.forEach(n=>{ if(!bal[n])bal[n]={e:0,p:0}; bal[n].e+=s; }); }});
+        window.appData.payouts.forEach(p=>{ if(!bal[p.to])bal[p.to]={e:0,p:0}; bal[p.to].p+=p.amt; });
+        const tb=document.getElementById('dist-status-tb');
+        if(tb) {
+            tb.innerHTML = Object.keys(bal).sort().map(n=>{
+                const b=bal[n], r=b.e-b.p; if(b.e===0&&b.p===0)return '';
+                const btn = window.isAdmin&&r>0 ? `<button class="action-btn btn-pay" onclick="setPayTarget('${n}',${r})">정산</button>` : '-';
+                return `<tr><td>${n}</td><td style="color:#1890ff">+${b.e.toLocaleString()}</td><td style="color:#555">-${b.p.toLocaleString()}</td><td style="font-weight:bold;color:${r>0?'#ff6b00':'#bbb'}">${r.toLocaleString()}</td><td>${btn}</td></tr>`;
+            }).join('') || '<tr><td colspan="5" class="record-empty">내역 없음</td></tr>';
         }
-
-        const logBody = document.getElementById('dist-log-tb');
-        if(logBody) {
-          const logs = [];
-          window.appData.distribution.forEach((d, idx) => logs.push({
-              date:d.date, 
-              msg: `[수입] ${d.item} (${d.net.toLocaleString()}) -> ${d.targets ? d.targets.length : 0}명`, 
-              type:'inc',
-              idx: idx
-          }));
-          window.appData.payouts.forEach((p, idx) => logs.push({
-              date:p.date, 
-              msg: `[지급] ${p.to}에게 ${p.amt.toLocaleString()} 지급`, 
-              type:'pay',
-              idx: idx
-          }));
-          
-          logs.sort((a,b) => b.date.localeCompare(a.date));
-          
-          logBody.innerHTML = logs.slice(0, 50).map(l => {
-            const delBtn = window.isAdmin ? `<button class="action-btn btn-del" onclick="deleteDistLog('${l.type}', ${l.idx})">×</button>` : '';
-            return `<tr>
-              <td style="font-size:11px; color:#888; width:80px;">${l.date}</td>
-              <td style="text-align:left; color:${l.type==='inc'?'#222':'#d93025'}">${l.msg}</td>
-              <td style="width:30px; text-align:center;">${delBtn}</td>
-            </tr>`;
-          }).join('');
+        const lb=document.getElementById('dist-log-tb');
+        if(lb) {
+            const logs=[]; 
+            window.appData.distribution.forEach((d,i)=>logs.push({d:d.date,m:`[수입] ${d.item} (${d.net.toLocaleString()})`,t:'inc',i:i}));
+            window.appData.payouts.forEach((p,i)=>logs.push({d:p.date,m:`[지급] ${p.to} ${p.amt.toLocaleString()}`,t:'pay',i:i}));
+            logs.sort((a,b)=>b.d.localeCompare(a.d));
+            lb.innerHTML = logs.slice(0,50).map(l=>`<tr><td style="font-size:11px;color:#888;">${l.d}</td><td style="text-align:left;">${l.m}</td><td>${window.isAdmin?`<button class="action-btn btn-del" onclick="deleteDistLog('${l.t}',${l.i})">×</button>`:''}</td></tr>`).join('');
         }
       }
+      window.deleteDistLog = function(t,i){ if(confirm('삭제?')){ if(t==='inc')window.appData.distribution.splice(i,1); else window.appData.payouts.splice(i,1); saveAllData(); renderDistStatus(); }}
 
-      window.deleteDistLog = function(type, idx) {
-        if(!confirm('해당 기록을 삭제하시겠습니까? (잔액은 자동 재계산됩니다)')) return;
-        if(type === 'inc') window.appData.distribution.splice(idx, 1);
-        else window.appData.payouts.splice(idx, 1);
-        saveAllData();
-        renderDistStatus();
-      }
+      /* [기타 카테고리] */
+      window.openChannelHistory = () => { showContent('📢 오늘의 채널', `<div class="table-wrapper">${genTable('ch-tb',['날짜','리프레','원정대','관리'])}</div>` + (window.isAdmin?`<div class="form-group"><div class="form-row"><input type="date" id="ch-d" class="form-control" value="${getTodayStr()}"><input type="text" id="ch-v1" class="form-control" placeholder="리프레"><input type="text" id="ch-v2" class="form-control" placeholder="원정대"></div><button class="form-submit-btn" onclick="addCh()">등록</button></div>`:'')); renCh(); }
+      window.addCh = () => { window.appData.channel.unshift({date:document.getElementById('ch-d').value, v1:document.getElementById('ch-v1').value, v2:document.getElementById('ch-v2').value}); saveAllData(); renCh(); }
+      window.renCh = () => { document.getElementById('ch-tb').innerHTML = window.appData.channel.map((c,i)=>`<tr><td>${c.date}</td><td>${c.v1}</td><td>${c.v2}</td><td>${window.isAdmin?`<button class="action-btn btn-del" onclick="deleteRecord('channel',${i})">×</button>`:'-'}</td></tr>`).join('')||'<tr><td colspan="4">없음</td></tr>'; }
 
-      /* --- [카테고리: 오늘의 채널] --- */
-      window.openChannelHistory = function(){
-        const d = getTodayStr();
-        const inputHtml = window.isAdmin ? `<div class="form-group" style="background:#fff; padding:15px; border-radius:12px; border:1px solid #eee; margin-bottom:15px;">
-          <div class="form-row" style="margin-bottom:8px;"><input type="date" id="ch-in-d" class="form-control" value="${d}"></div>
-          <div class="form-row" style="margin-bottom:8px;">
-            <input type="text" id="ch-v1" class="form-control" placeholder="리프레 채널">
-            <input type="text" id="ch-v2" class="form-control" placeholder="원정대 채널">
-          </div>
-          <button class="form-submit-btn" onclick="addCh()">+ 채널 기록 등록</button></div>` : '';
-        showContent('📢 오늘의 채널', inputHtml + `<div class="table-wrapper">` + genTable('ch-tb',['날짜','리프레','원정대','관리']) + `</div>`);
-        renCh();
-      }
-      window.addCh = function(){ 
-        const d=document.getElementById('ch-in-d').value; 
-        window.appData.channel.unshift({date:d, v1:document.getElementById('ch-v1').value, v2:document.getElementById('ch-v2').value}); 
-        saveAllData(); renCh(); 
-      }
-      window.renCh = function(){
-        const b = document.getElementById('ch-tb'); if(!b) return;
-        b.innerHTML = window.appData.channel.map((c, idx)=>`<tr><td>${c.date}</td><td>${c.v1||''}</td><td>${c.v2||''}</td><td><button class="action-btn btn-del" onclick="deleteRecord('channel', ${idx})">×</button></td></tr>`).join('') || '<tr><td colspan="4">기록 없음</td></tr>';
-      }
+      window.openEntryTimeHistory = () => { showContent('⏰ 입장 시간', `<div class="table-wrapper">${genTable('en-tb',['날짜','알버프','영메','입장','관리'])}</div>` + (window.isAdmin?`<div class="form-group"><div class="form-row"><input type="date" id="en-d" class="form-control" value="${getTodayStr()}"><input type="text" id="en-a" class="form-control" placeholder="알"><input type="text" id="en-y" class="form-control" placeholder="영"><input type="text" id="en-t" class="form-control" placeholder="입"></div><button class="form-submit-btn" onclick="addEn()">등록</button></div>`:'')); renEn(); }
+      window.addEn = () => { window.appData.entry.unshift({date:document.getElementById('en-d').value, al:document.getElementById('en-a').value, ym:document.getElementById('en-y').value, time:document.getElementById('en-t').value}); saveAllData(); renEn(); }
+      window.renEn = () => { document.getElementById('en-tb').innerHTML = window.appData.entry.map((e,i)=>`<tr><td>${e.date}</td><td>${e.al}</td><td>${e.ym}</td><td>${e.time}</td><td>${window.isAdmin?`<button class="action-btn btn-del" onclick="deleteRecord('entry',${i})">×</button>`:'-'}</td></tr>`).join('')||'<tr><td colspan="5">없음</td></tr>'; }
 
-      /* --- [카테고리: 입장 시간] --- */
-      window.openEntryTimeHistory = function() {
-        const d = getTodayStr();
-        const inputHtml = window.isAdmin ? `<div class="form-group" style="background:#fff; padding:15px; border-radius:12px; border:1px solid #eee; margin-bottom:15px;">
-          <div class="form-row" style="margin-bottom:8px;"><input type="date" id="en-d" class="form-control" value="${d}" style="width:140px"><input type="text" id="en-al" class="form-control" placeholder="알버프 시간"></div>
-          <div class="form-row" style="margin-bottom:8px;"><input type="text" id="en-ym" class="form-control" placeholder="영메 시간"><input type="text" id="en-time" class="form-control" placeholder="입장 시간"></div>
-          <button class="form-submit-btn" onclick="addEn()">+ 입장 기록 등록</button></div>` : '';
-        showContent('⏰ 입장 시간 관리', inputHtml + `<div class="table-wrapper">` + genTable('en-tb', ['날짜', '알버프', '영메', '시간', '관리']) + `</div>`);
-        renEn();
-      }
-      window.addEn = function(){
-        window.appData.entry.unshift({date:document.getElementById('en-d').value, al:document.getElementById('en-al').value, ym:document.getElementById('en-ym').value, time:document.getElementById('en-time').value});
-        saveAllData(); renEn();
-      }
-      window.renEn = function(){
-        const b = document.getElementById('en-tb'); if(!b) return;
-        b.innerHTML = window.appData.entry.map((e,i)=>`<tr><td>${e.date}</td><td>${e.al}</td><td>${e.ym}</td><td>${e.time}</td><td><button class="action-btn btn-del" onclick="deleteRecord('entry',${i})">×</button></td></tr>`).join('') || '<tr><td colspan="5">없음</td></tr>';
-      }
+      window.openGuestHistory = () => { showContent('🎫 손님 정보', `<div class="table-wrapper">${genTable('gu-tb',['날짜','닉네임','소개','품목','금액','버프','관리'])}</div>` + (window.isAdmin?`<div class="form-group"><div class="form-row"><input type="date" id="gu-d" class="form-control" value="${getTodayStr()}"><input type="text" id="gu-n" class="form-control" placeholder="닉네임"><input type="text" id="gu-i" class="form-control" placeholder="소개"></div><div class="form-row"><input type="text" id="gu-it" class="form-control" placeholder="품목"><input type="number" id="gu-a" class="form-control" placeholder="금액"><select id="gu-b" class="form-control"><option>반납</option><option>미반납</option></select></div><button class="form-submit-btn" onclick="addGu()">등록</button></div>`:'')); renGu(); }
+      window.addGu = () => { window.appData.guest.unshift({date:document.getElementById('gu-d').value, nick:document.getElementById('gu-n').value, intro:document.getElementById('gu-i').value, item:document.getElementById('gu-it').value, amt:document.getElementById('gu-a').value, buff:document.getElementById('gu-b').value}); saveAllData(); renGu(); }
+      window.renGu = () => { document.getElementById('gu-tb').innerHTML = window.appData.guest.map((g,i)=>`<tr><td>${g.date}</td><td>${g.nick}</td><td>${g.intro}</td><td>${g.item}</td><td>${parseInt(g.amt||0).toLocaleString()}</td><td>${g.buff}</td><td>${window.isAdmin?`<button class="action-btn btn-del" onclick="deleteRecord('guest',${i})">×</button>`:'-'}</td></tr>`).join('')||'<tr><td colspan="7">없음</td></tr>'; }
 
-      /* --- [카테고리: 손님 정보] --- */
-      window.openGuestHistory = function() {
-        const d = getTodayStr();
-        const inputHtml = window.isAdmin ? `
-          <div class="form-group" style="background:#fff; padding:15px; border-radius:12px; border:1px solid #eee; margin-bottom:15px;">
-            <div class="form-row" style="margin-bottom:8px;">
-              <input type="date" id="gu-d" class="form-control" value="${d}" style="width:140px">
-              <input type="text" id="gu-nick" class="form-control" placeholder="손님 닉네임" style="flex:1">
-              <input type="text" id="gu-intro" class="form-control" placeholder="소개자" style="flex:1">
-            </div>
-            <div class="form-row" style="margin-bottom:8px;">
-              <input type="text" id="gu-item" class="form-control" placeholder="구매 품목" style="flex:1">
-              <input type="number" id="gu-amt" class="form-control" placeholder="구매 금액" style="flex:1">
-              <select id="gu-buff" class="form-control" style="width:120px"><option value="반납">버프 반납</option><option value="미반납">버프 미반납</option></select>
-            </div>
-            <button class="form-submit-btn" onclick="addGu()">+ 손님 정보 등록</button>
-          </div>` : '';
-        showContent('🎫 손님 정보 관리', inputHtml + `<div class="table-wrapper">` + genTable('gu-tb', ['날짜', '닉네임', '소개자', '품목', '금액', '버프', '관리']) + `</div>`);
-        renGu();
-      }
-      window.addGu = function(){
-        window.appData.guest.unshift({date:document.getElementById('gu-d').value, nick:document.getElementById('gu-nick').value, intro:document.getElementById('gu-intro').value, item:document.getElementById('gu-item').value, amt:document.getElementById('gu-amt').value, buff:document.getElementById('gu-buff').value});
-        saveAllData(); renGu();
-      }
-      window.renGu = function(){
-        const b = document.getElementById('gu-tb'); if(!b) return;
-        b.innerHTML = window.appData.guest.map((g,i)=>`<tr><td>${g.date}</td><td><b>${g.nick}</b></td><td>${g.intro}</td><td>${g.item}</td><td>${parseInt(g.amt).toLocaleString()}</td><td>${g.buff}</td><td><button class="action-btn btn-del" onclick="deleteRecord('guest',${i})">×</button></td></tr>`).join('') || '<tr><td colspan="7">없음</td></tr>';
-      }
+      window.openLootHistory = () => { showContent('💎 전리품', `<div class="table-wrapper">${genTable('lo-tb',['날짜','마북','장비','특이사항','관리'])}</div>` + (window.isAdmin?`<div class="form-group"><input type="date" id="lo-d" class="form-control" value="${getTodayStr()}"><input type="text" id="lo-m" class="form-control" placeholder="마북"><input type="text" id="lo-e" class="form-control" placeholder="장비"><input type="text" id="lo-n" class="form-control" placeholder="특이사항"><button class="form-submit-btn" onclick="addLo()">등록</button></div>`:'')); renLo(); }
+      window.addLo = () => { window.appData.loot.unshift({date:document.getElementById('lo-d').value, mastery:document.getElementById('lo-m').value, equip:document.getElementById('lo-e').value, note:document.getElementById('lo-n').value}); saveAllData(); renLo(); }
+      window.renLo = () => { document.getElementById('lo-tb').innerHTML = window.appData.loot.map((l,i)=>`<tr><td>${l.date}</td><td>${l.mastery}</td><td>${l.equip}</td><td>${l.note}</td><td>${window.isAdmin?`<button class="action-btn btn-del" onclick="deleteRecord('loot',${i})">×</button>`:'-'}</td></tr>`).join('')||'<tr><td colspan="5">없음</td></tr>'; }
 
-      /* --- [카테고리: 연차 신청] --- */
+      /* [연차 & 기타] */
       window.openLeaveCalendar = function() {
-        const now = new Date(); const y = now.getFullYear(); const m = now.getMonth();
-        const fd = new Date(y, m, 1).getDay(); const ld = new Date(y, m + 1, 0).getDate();
-        let h = `<div style="text-align:center; font-weight:bold; margin-bottom:10px;">${y}년 ${m+1}월</div><div class="calendar-container"><div class="calendar-grid">`;
-        ['일','월','화','수','목','금','토'].forEach(day => h += `<div class="calendar-header">${day}</div>`);
+        const now = new Date(); const y = now.getFullYear(); const m = now.getMonth(); const fd = new Date(y, m, 1).getDay(); const ld = new Date(y, m + 1, 0).getDate();
+        let h = `<div style="text-align:center;font-weight:bold;margin-bottom:10px;">${y}년 ${m+1}월</div><div class="calendar-container"><div class="calendar-grid">`;
+        ['일','월','화','수','목','금','토'].forEach(d=>h+=`<div class="calendar-header">${d}</div>`);
         for(let i=0; i<fd; i++) h += `<div class="calendar-day"></div>`;
         for(let d=1; d<=ld; d++) {
-          const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-          const dailyLeaves = window.appData.leaves.filter(l => l.date === dateStr);
-          const badges = dailyLeaves.map(l => 
-            `<span class="leave-badge ${l.role==='admin'?'admin':''}" onclick="deleteLeave(event, '${dateStr}', '${l.nick}')" title="클릭하여 삭제">${l.nick} <span style="font-size:10px;">×</span></span>`
-          ).join('');
-          
-          h += `<div class="calendar-day" onclick="applyLeave('${dateStr}')"><span class="day-num">${d}</span>${badges}</div>`;
+          const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+          const b = window.appData.leaves.filter(l=>l.date===ds).map(l=>`<span class="leave-badge ${l.role==='admin'?'admin':''}" onclick="delLeave(event,'${ds}','${l.nick}')">${l.nick}×</span>`).join('');
+          h += `<div class="calendar-day" onclick="addLeave('${ds}')"><span class="day-num">${d}</span>${b}</div>`;
         }
-        showContent('📅 연차 신청', h + `</div></div>`);
+        showContent('📅 연차 신청', h+'</div></div>');
       }
-      window.deleteLeave = (e, date, nick) => {
-        e.stopPropagation();
-        if(confirm(`${date}일자 ${nick}님의 연차 신청을 취소하시겠습니까?`)) {
-            const idx = window.appData.leaves.findIndex(l => l.date === date && l.nick === nick);
-            if(idx > -1) { window.appData.leaves.splice(idx, 1); saveAllData(); openLeaveCalendar(); }
-        }
-      }
-      window.applyLeave = (date) => {
-        const name = prompt(`${date} 연차 신청 성함을 입력하세요:`, window.currentUser);
-        if(name) { window.appData.leaves.push({date, nick:name}); saveAllData(); openLeaveCalendar(); }
-      }
+      window.addLeave = (d) => { const n=prompt(`${d} 연차 신청자 이름:`, window.currentUser); if(n){ window.appData.leaves.push({date:d, nick:n, role:window.userRole}); saveAllData(); openLeaveCalendar(); } }
+      window.delLeave = (e,d,n) => { e.stopPropagation(); if(confirm('취소하시겠습니까?')){ const i=window.appData.leaves.findIndex(l=>l.date===d&&l.nick===n); if(i>-1){ window.appData.leaves.splice(i,1); saveAllData(); openLeaveCalendar(); } } }
 
-      /* --- [카테고리: 전리품 정보] --- */
-      window.openLootHistory = function() {
-        const d = getTodayStr();
-        const inputHtml = window.isAdmin ? `<div class="form-group" style="background:#fff; padding:15px; border-radius:12px; border:1px solid #eee; margin-bottom:15px;">
-          <input type="date" id="lo-d" value="${d}" class="form-control" style="margin-bottom:8px">
-          <input type="text" id="lo-m" placeholder="마스터리북" class="form-control" style="margin-bottom:8px">
-          <input type="text" id="lo-e" placeholder="장비" class="form-control" style="margin-bottom:8px">
-          <input type="text" id="lo-n" placeholder="특이사항" class="form-control" style="margin-bottom:8px">
-          <button onclick="addLo()" class="form-submit-btn">저장</button></div>` : '';
-        showContent('💎 전리품 정보', inputHtml + `<div class="table-wrapper">` + genTable('lo-tb', ['날짜','마북','장비','특이사항','관리']) + `</div>`);
-        renLo();
+      window.openMultiTimer = () => showContent('⏱️ 타이머', '<div style="text-align:center; padding:20px;">타이머 기능 (추후 구현)</div>');
+      window.openGuestReviews = () => {
+          const h = `<div style="background:#fff;padding:10px;border-radius:8px;margin-bottom:10px;"><div id="re-edit" class="review-editor" contenteditable="true" style="border:1px solid #ddd;min-height:80px;border-radius:4px;padding:5px;"></div><button class="form-submit-btn" onclick="saveRev()">등록</button></div><div id="re-list"></div>`;
+          showContent('⭐ 리뷰', h); renRev();
       }
-      window.addLo = () => { window.appData.loot.unshift({date:document.getElementById('lo-d').value, mastery:document.getElementById('lo-m').value, equip:document.getElementById('lo-e').value, note:document.getElementById('lo-n').value}); saveAllData(); renLo(); }
-      window.renLo = () => {
-        const b = document.getElementById('lo-tb'); if(!b) return;
-        b.innerHTML = window.appData.loot.map((l,i)=>`<tr><td>${l.date}</td><td>${l.mastery}</td><td>${l.equip}</td><td>${l.note}</td><td><button class="action-btn btn-del" onclick="deleteRecord('loot',${i})">×</button></td></tr>`).join('') || '<tr><td colspan="5">없음</td></tr>';
-      }
+      window.saveRev = () => { window.appData.reviews.unshift({writer:window.currentUser, content:document.getElementById('re-edit').innerHTML, date:new Date().toLocaleString()}); saveAllData(); renRev(); }
+      window.renRev = () => { document.getElementById('re-list').innerHTML = window.appData.reviews.map(r=>`<div style="background:#fff;padding:10px;border-bottom:1px solid #eee;"><b>${r.writer}</b> <span style="font-size:11px;color:#999;">${r.date}</span><br>${r.content}</div>`).join(''); }
 
-      /* --- [파티 관리] --- */
+      /* [파티 관리] */
       window.loadMembers = function() {
-        var c = document.getElementById('member-list-container');
-        if(window.localMembers.length === 0) return c.innerHTML = '<div style="text-align:center;padding:40px;color:#bbb;font-size:14px;">편성된 파티가 없습니다.<br>상단 + 버튼을 눌러 편성하세요.</div>';
-        
-        var grp = {'1파티':[], '2파티':[], '3파티':[], '대기':[]};
-        window.localMembers.forEach(m => {
-            const jobClass = getJobKey(m[1]);
-            if(grp[m[3]]) grp[m[3]].push({nick:m[0], job:m[1], level:m[2], jobClass: jobClass});
-            else { if(!grp['기타']) grp['기타']=[]; grp['기타'].push({nick:m[0], job:m[1], level:m[2], jobClass: jobClass}); }
-        });
-        
-        let h = '';
-        ['1파티','2파티','3파티','대기'].forEach(p => {
-          if(grp[p].length > 0) {
-            h += `<div class="party-header">${p} <span style="opacity:0.7; font-size:0.9em; margin-left:5px;">${grp[p].length}</span></div>`;
-            grp[p].forEach(m => {
-              var del = window.isAdmin ? `<button class="delete-btn" onclick="delMem('${m.nick}')">×</button>` : '';
-              h += `<div class="member-item ${m.jobClass}">
-                <div class="member-info"><span class="member-name">${m.nick}</span><span class="member-detail">${m.job}</span></div>
-                <div class="member-right"><span class="member-lv">Lv.${m.level}</span>${del}</div>
-              </div>`;
-            });
-          }
-        });
-        c.innerHTML = h;
+        const c=document.getElementById('member-list-container'); if(window.localMembers.length===0) return c.innerHTML='<div style="text-align:center;padding:20px;color:#999">파티원 없음</div>';
+        const grp={'1파티':[],'2파티':[],'3파티':[],'대기':[]};
+        window.localMembers.forEach(m=>{ const j=getJobKey(m[1]); if(grp[m[3]])grp[m[3]].push({...{nick:m[0],job:m[1],lvl:m[2]}, cls:j}); });
+        let h=''; Object.keys(grp).forEach(p=>{ if(grp[p].length){ h+=`<div class="party-header">${p}</div>`; grp[p].forEach(m=>{ h+=`<div class="member-item ${m.cls}"><div class="member-info"><span class="member-name">${m.nick}</span><span class="member-detail">${m.job}</span></div><div class="member-right"><span class="member-lv">Lv.${m.lvl}</span>${window.isAdmin?`<button class="delete-btn" onclick="delMem('${m.nick}')">×</button>`:''}</div></div>`; }); } });
+        c.innerHTML=h;
       }
-
-      window.getJobKey = (job) => {
-        if(job === '히어로') return 'hero';
-        if(['나이트로드', '섀도어'].some(j => job.includes(j))) return 'thief';
-        if(['비숍', '아크메이지'].some(j => job.includes(j))) return 'mage';
-        if(['보우마스터', '신궁'].some(j => job.includes(j))) return 'archer';
-        if(job === '다크나이트') return 'dk';
-        return '';
-      }
-
-      window.delMem = (n) => { if(confirm(n+'님을 파티에서 제외할까요?')){ window.localMembers=window.localMembers.filter(m=>m[0]!==n); saveAllData(); loadMembers(); } }
-      window.resetParty = () => { if(confirm('모든 파티 편성을 초기화할까요?')){ window.localMembers=[]; saveAllData(); loadMembers(); } }
+      window.getJobKey = (j) => { if(j==='히어로')return 'hero'; if(['나이트로드','섀도어'].some(k=>j.includes(k)))return 'thief'; if(['비숍','아크메이지'].some(k=>j.includes(k)))return 'mage'; if(['보우마스터','신궁'].some(k=>j.includes(k)))return 'archer'; if(j==='다크나이트')return 'dk'; return ''; }
+      window.delMem = (n) => { if(confirm('삭제?')){ window.localMembers=window.localMembers.filter(m=>m[0]!==n); saveAllData(); loadMembers(); } }
+      window.resetParty = () => { if(confirm('초기화?')){ window.localMembers=[]; saveAllData(); loadMembers(); } }
       window.openAddMemberModal = () => { document.getElementById('add-member-modal').style.display='flex'; switchAddTab('pick'); renderEasySetup(); }
       window.closeAddModal = (e) => { if(e.target.id==='add-member-modal') e.target.style.display='none'; }
-      window.switchAddTab = (t) => { 
-        document.getElementById('tab-btn-pick').className = t==='pick'?'tab-btn active':'tab-btn';
-        document.getElementById('tab-btn-single').className = t==='single'?'tab-btn active':'tab-btn';
-        document.getElementById('tab-content-pick').style.display = t==='pick'?'block':'none'; 
-        document.getElementById('tab-content-single').style.display = t==='single'?'block':'none'; 
-      }
-
-      window.getJobClass = (job) => {
-        if(job === '히어로') return 'bg-hero';
-        if(['나이트로드', '섀도어'].some(j => job.includes(j))) return 'bg-thief';
-        if(['비숍', '아크메이지'].some(j => job.includes(j))) return 'bg-mage';
-        if(['보우마스터', '신궁'].some(j => job.includes(j))) return 'bg-archer';
-        if(job === '다크나이트') return 'bg-dk';
-        return '';
-      }
-
+      window.switchAddTab = (t) => { document.getElementById('tab-btn-pick').className=t==='pick'?'tab-btn active':'tab-btn'; document.getElementById('tab-btn-single').className=t==='single'?'tab-btn active':'tab-btn'; document.getElementById('tab-content-pick').style.display=t==='pick'?'block':'none'; document.getElementById('tab-content-single').style.display=t==='single'?'block':'none'; }
       window.renderEasySetup = () => {
-        const pool = document.getElementById('pool-container');
-        const available = window.allMembers.filter(m => !window.localMembers.some(l => l[0] === m.nick));
-        pool.innerHTML = available.map(m => {
-          const isSel = window.selectedNicks.includes(m.nick);
-          const color = getJobClass(m.job);
-          return `<div class="pool-chip ${color} ${isSel?'selected':''}" onclick="togglePoolSelect('${m.nick}')">
-            <div class="chip-del-btn" onclick="deleteFromPool(event, '${m.nick}')">×</div>
-            <span class="chip-name">${m.nick}</span>
-            <span class="chip-sub">${m.job} / Lv.${m.level}</span>
-          </div>`;
-        }).join('') || '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#aaa;">대기실이 비어있습니다.</div>';
-        const hasSel = window.selectedNicks.length > 0;
-        document.querySelectorAll('.party-add-btn').forEach(btn => { btn.classList.toggle('active', hasSel); btn.disabled = !hasSel; });
+        const pool=document.getElementById('pool-container'); 
+        const av=window.allMembers.filter(m=>!window.localMembers.some(l=>l[0]===m.nick));
+        pool.innerHTML=av.map(m=>`<div class="pool-chip ${getJobKey(m.job)} ${window.selectedNicks.includes(m.nick)?'selected':''}" onclick="togPool('${m.nick}')"><div class="chip-del-btn" onclick="delPool(event,'${m.nick}')">×</div><span class="chip-name">${m.nick}</span><span class="chip-sub">${m.job}</span></div>`).join('');
       }
+      window.togPool = (n) => { const i=window.selectedNicks.indexOf(n); if(i>-1)window.selectedNicks.splice(i,1); else window.selectedNicks.push(n); renderEasySetup(); }
+      window.delPool = (e,n) => { e.stopPropagation(); if(confirm('영구삭제?')){ window.allMembers=window.allMembers.filter(m=>m.nick!==n); saveAllData(); renderEasySetup(); } }
+      window.addSelectedToParty = (p) => { window.selectedNicks.forEach(n=>{ const m=window.allMembers.find(x=>x.nick===n); if(m)window.localMembers.push([m.nick,m.job,m.level,p]); }); window.selectedNicks=[]; saveAllData(); loadMembers(); renderEasySetup(); }
+      window.submitNewMember = () => { window.allMembers.push({nick:document.getElementById('new-nick').value, job:document.getElementById('new-job').value, level:document.getElementById('new-level').value}); saveAllData(); renderEasySetup(); }
 
-      window.togglePoolSelect = (n) => { const i=window.selectedNicks.indexOf(n); if(i>-1) window.selectedNicks.splice(i,1); else window.selectedNicks.push(n); renderEasySetup(); }
-      window.deleteFromPool = (e, n) => { e.stopPropagation(); if(confirm(n+'님을 완전히 삭제할까요?')){ window.allMembers=window.allMembers.filter(m=>m.nick!==n); saveAllData(); renderEasySetup(); } }
-      window.addSelectedToParty = (p) => {
-        window.selectedNicks.forEach(n => { const m=window.allMembers.find(x=>x.nick===n); if(m) window.localMembers.push([m.nick, m.job, m.level, p]); });
-        window.selectedNicks = []; saveAllData(); loadMembers(); renderEasySetup();
-      }
-      window.submitNewMember = () => {
-        const n=document.getElementById('new-nick').value, j=document.getElementById('new-job').value, l=document.getElementById('new-level').value;
-        if(!n||!l) return alert('정보를 입력하세요.');
-        window.allMembers.push({nick:n, job:j, level:l});
-        document.getElementById('new-nick').value=''; document.getElementById('new-level').value='';
-        saveAllData(); renderEasySetup();
-      }
-
-      /* --- [공통] --- */
-      window.tryLogin = function() {
-        const n = document.getElementById('login-nick').value, p = document.getElementById('login-pw').value;
-        if(n==='관리자' && p===window.sysConfig.pwAdmin) authS(n, 'admin');
-        else if(p===window.sysConfig.pwMember) authS(n, 'member');
-        else if(p===window.sysConfig.pwGuest) authS(n, 'guest');
-        else alert('비밀번호가 틀렸습니다.');
-      }
-      function authS(n, r) {
-        window.currentUser=n; window.userRole=r; window.isAdmin=(r==='admin');
-        document.getElementById('login-view').style.display='none'; document.getElementById('main-app').style.display='block';
-        document.getElementById('user-display').innerText=n;
-        const b=document.getElementById('role-badge'); b.innerText=(r==='admin'?'관리자':r==='member'?'공대원':'손님');
-        b.style.background=(r==='admin'?'#ff4d4f':r==='member'?'#1890ff':'#52c41a');
-        if(window.isAdmin){ document.getElementById('add-member-btn').style.display='block'; document.getElementById('reset-party-btn').style.display='block'; }
-        refreshUI();
-      }
-
-      window.openMultiTimer = () => showContent('⏱️ 타이머', '타이머 로직 복구 완료');
-      window.openGuestReviews = () => {
-          const inputHtml = `<div style="background:#fff; padding:15px; border-radius:12px; border:1px solid #eee; margin-bottom:20px;"><div id="rev-edit" class="review-editor" contenteditable="true" style="border:1px solid #ddd; padding:10px; min-height:100px; border-radius:8px;"></div><button onclick="saveReview()" class="form-submit-btn">등록</button></div>`;
-          showContent('⭐ 리뷰', inputHtml + `<div id="review-list"></div>`); renRev();
-      };
-      window.saveReview = () => { 
-          const e = document.getElementById('rev-edit'); 
-          window.appData.reviews.unshift({writer:window.currentUser, content:e.innerHTML, date:new Date().toLocaleString()}); 
-          saveAllData(); e.innerHTML=''; renRev(); 
-      };
-      window.renRev = () => { 
-          const l = document.getElementById('review-list'); if(!l) return;
-          l.innerHTML = window.appData.reviews.map(r=>`<div style="padding:10px; border-bottom:1px solid #eee;"><b>${r.writer}</b> (${r.date})<br>${r.content}</div>`).join('') || '리뷰가 없습니다.';
-      };
-
+      /* [공통] */
+      window.tryLogin = () => { const n=document.getElementById('login-nick').value, p=document.getElementById('login-pw').value; if(n==='관리자'&&p===window.sysConfig.pwAdmin)authS(n,'admin'); else if(p===window.sysConfig.pwMember)authS(n,'member'); else if(p===window.sysConfig.pwGuest)authS(n,'guest'); else alert('비밀번호 오류'); }
+      function authS(n,r) { window.currentUser=n; window.userRole=r; window.isAdmin=(r==='admin'); document.getElementById('login-view').style.display='none'; document.getElementById('main-app').style.display='block'; document.getElementById('user-display').innerText=n; const b=document.getElementById('role-badge'); b.innerText=(r==='admin'?'관리자':r==='member'?'공대원':'손님'); b.style.background=(r==='admin'?'#ff4d4f':r==='member'?'#1890ff':'#52c41a'); if(window.isAdmin){ document.getElementById('add-member-btn').style.display='block'; document.getElementById('reset-party-btn').style.display='block'; } refreshUI(); }
       window.getTodayStr = () => new Date().toISOString().split('T')[0];
-      window.genTable = (id, ths) => `<table class="record-table"><thead><tr>${ths.map(t=>`<th>${t}</th>`).join('')}</tr></thead><tbody id="${id}"></tbody></table>`;
+      window.genTable = (id,ths) => `<table class="record-table"><thead><tr>${ths.map(t=>`<th>${t}</th>`).join('')}</tr></thead><tbody id="${id}"></tbody></table>`;
       window.showContent = (t,h) => { document.getElementById('modal-title').innerText=t; document.getElementById('modal-content').innerHTML=h; document.getElementById('modal-overlay').style.display='flex'; }
-      window.closeModal = (e) => { if(e.target.classList.contains('modal-overlay')) e.target.style.display='none'; }
-      window.deleteRecord = (type, idx) => { if(confirm('삭제할까요?')){ window.appData[type].splice(idx,1); saveAllData(); refreshUI(); } }
-      window.handleEnter = (e) => { if(e.keyCode===13) tryLogin(); }
+      window.closeModal = (e) => { if(e.target.classList.contains('modal-overlay'))e.target.style.display='none'; }
+      window.deleteRecord = (t,i) => { if(confirm('삭제?')){ window.appData[t].splice(i,1); saveAllData(); refreshUI(); } }
+      window.handleEnter = (e) => { if(e.keyCode===13)tryLogin(); }
     </script>
   </body>
 </html>
