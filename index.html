@@ -3,7 +3,7 @@
   <head>
     <base target="_top">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>혼테일 공대 관리 플랫폼</title>
+    <title>혼테일 공대 관리 플랫폼 (Advanced)</title>
     
     <style>
       /* --- [기본 설정] --- */
@@ -174,6 +174,8 @@
       .form-row { display: flex; gap: 8px; align-items: center; }
       .form-submit-btn { width: 100%; background: #ff6b00; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 14px; }
       .form-submit-btn:hover { background: #e65c00; }
+      .btn-outline { background: #fff; border: 1px solid #ddd; color: #555; }
+      .btn-outline:hover { background: #f5f5f5; }
 
       /* 테이블 모바일 대응 (스크롤) */
       .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 10px; border: 1px solid #eee; border-radius: 8px; }
@@ -184,6 +186,7 @@
       .action-btn { border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 11px; margin: 0 1px; font-weight: bold; }
       .btn-del { background: #fff1f0; color: #f5222d; }
       .btn-pay { background: #e6f7ff; color: #1890ff; }
+      .btn-info { background: #e6fffb; color: #006d75; }
 
       /* --- [구글 캘린더 스타일] --- */
       .calendar-container { background: #fff; border-radius: 12px; border: 1px solid #e0e0e0; overflow: hidden; }
@@ -247,15 +250,38 @@
         background: #fff; color: #ff6b00; box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
       }
 
-      /* --- [분배금 관리 스타일] --- */
-      .dist-layout { display: flex; flex-direction: column; gap: 20px; }
-      .dist-panel { background: #fff; border-radius: 12px; border: 1px solid #eee; padding: 20px; }
-      .dist-title { font-weight: 800; font-size: 16px; margin-bottom: 12px; color: #333; border-left: 4px solid #ff6b00; padding-left: 10px; }
-      .dist-member-pool { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; background: #fcfcfc; border: 1px solid #eee; border-radius: 8px; max-height: 150px; overflow-y: auto; margin-bottom: 10px; }
-      .dist-chip { padding: 6px 12px; background: #fff; border: 1px solid #ddd; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.2s; user-select: none; color: #555; }
-      .dist-chip.selected { background: #ff6b00; color: white; border-color: #ff6b00; font-weight: bold; box-shadow: 0 2px 6px rgba(255,107,0,0.2); }
-      .balance-plus { color: #52c41a; font-weight: bold; }
-      .balance-zero { color: #ccc; }
+      /* --- [NEW: 고급 분배금 관리 스타일] --- */
+      .raid-card { border: 1px solid #ddd; border-radius: 12px; padding: 15px; margin-bottom: 15px; background: #fff; }
+      .raid-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+      .raid-title { font-weight: 800; font-size: 16px; color: #333; }
+      .raid-status { font-size: 12px; font-weight: bold; padding: 4px 8px; border-radius: 6px; }
+      .status-open { background: #e6fffb; color: #006d75; }
+      .status-closed { background: #f5f5f5; color: #999; }
+      
+      .raid-stat-box { display: flex; gap: 10px; background: #fafafa; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; }
+      .stat-item { flex: 1; text-align: center; }
+      .stat-val { font-weight: 800; color: #ff6b00; font-size: 15px; }
+      
+      .item-add-box { background: #fffcf5; border: 1px dashed #ff6b00; padding: 15px; border-radius: 10px; margin-top: 15px; }
+      .toggle-option { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 8px; background: #fff; border: 1px solid #eee; border-radius: 6px; }
+      
+      .calc-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+      .calc-row.final { border-top: 1px solid #ddd; padding-top: 6px; font-weight: bold; font-size: 15px; margin-top: 6px; color: #ff6b00; }
+      .minus-val { color: #ff4d4f; }
+      .plus-val { color: #52c41a; }
+      
+      .share-control { display: flex; align-items: center; gap: 5px; }
+      .share-select { padding: 4px; border-radius: 4px; border: 1px solid #ddd; font-size: 12px; width: 130px; }
+      .share-input { padding: 4px; border-radius: 4px; border: 1px solid #ddd; font-size: 12px; width: 60px; text-align: center; }
+
+      /* 회차 생성 멤버 선택 칩 */
+      .select-member-pool { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; max-height: 150px; overflow-y: auto; border: 1px solid #eee; padding: 10px; border-radius: 8px; }
+      .select-chip { font-size: 12px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 15px; cursor: pointer; user-select: none; background: #fff; transition: all 0.2s; }
+      .select-chip.selected { background: #ff6b00; color: white; border-color: #ff6b00; font-weight: bold; }
+
+      /* 지급 처리 패널 */
+      .payout-panel { background: #fdfdfd; border: 1px solid #e0e0e0; border-radius: 10px; padding: 15px; margin-top: 20px; }
+      .payout-title { font-weight: 800; color: #333; margin-bottom: 10px; border-left: 4px solid #1890ff; padding-left: 10px; font-size: 14px; }
 
       /* --- [토스트] --- */
       #save-toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: #fff; padding: 10px 20px; border-radius: 30px; font-size: 14px; opacity: 0; transition: opacity 0.5s; z-index: 10000; pointer-events: none; }
@@ -268,7 +294,7 @@
     <div id="lobby-view">
       <div class="lobby-header">
         <div class="lobby-title">메이플스토리 공대 관리</div>
-        <div class="lobby-sub">함께하는 즐거움, 편리한 정산</div>
+        <div class="lobby-sub">함께하는 즐거움, 투명한 정산</div>
       </div>
       
       <div id="channel-list" class="channel-list">
@@ -341,8 +367,8 @@
           <div class="menu-btn tilt-card" data-tilt onclick="openLootHistory()">
             <span class="menu-icon">💎</span><span class="menu-label">전리품 정보</span><span class="menu-sub">마스터리북 / 장비</span>
           </div>
-          <div class="menu-btn tilt-card" data-tilt onclick="openDistributionHistory()">
-            <span class="menu-icon">💸</span><span class="menu-label highlight-text">분배금 정보</span><span class="menu-sub">수수료 자동 계산 & 정산</span>
+          <div class="menu-btn tilt-card" data-tilt onclick="openAdvancedDistribution()">
+            <span class="menu-icon">💸</span><span class="menu-label highlight-text">분배금 정보</span><span class="menu-sub">소개비/인센티브/패널티</span>
           </div>
           <div class="menu-btn tilt-card" data-tilt onclick="openGuestReviews()">
             <span class="menu-icon">⭐</span><span class="menu-label">손님 리뷰</span><span class="menu-sub">후기 및 인증샷</span>
@@ -465,25 +491,29 @@
         appId: "1:494207905469:web:bfacf66949995eaa6391d4"
       };
       
-      // [중요] 공대 생성 승인용 마스터 키 (원하는 암호로 변경하세요)
       const MASTER_CREATION_KEY = "admin1234"; 
-      
-      const ROOT_APP_ID = "raid-platform-v1"; // 플랫폼 ID (고정)
+      const ROOT_APP_ID = "raid-platform-v1";
       // =========================================================================
 
       window.sysConfig = { pwAdmin: '9999', pwMember: '0000', pwGuest: '7777' };
       window.currentUser = "";
       window.userRole = "";
       window.isAdmin = false;
-      window.currentChannelId = ""; // 현재 접속중인 공대 ID
+      window.currentChannelId = ""; 
       
-      // 앱 데이터 초기값
-      const initialAppData = { channel: [], entry: [], guest: [], loot: [], leaves: [], distribution: [], payouts: [], reviews: [] };
+      // 앱 데이터 초기값 (NEW: raidSessions 추가)
+      const initialAppData = { 
+        channel: [], entry: [], guest: [], loot: [], leaves: [], reviews: [],
+        raidSessions: [] // 회차별 정산 데이터
+      };
       window.appData = JSON.parse(JSON.stringify(initialAppData));
       window.localMembers = [];
       window.allMembers = [];
       window.selectedNicks = [];
-      window.selectedDistMembers = [];
+      
+      // 로컬 변수
+      window.currentRaidId = null;
+      window.newRaidSelectedMembers = []; // 회차 생성 시 선택된 멤버들
 
       let db, auth;
 
@@ -494,27 +524,21 @@
         await signInAnonymously(auth);
         onAuthStateChanged(auth, (user) => { 
           if(user) {
-            loadChannelList(); // 로그인 되면 로비 목록 로드
+            loadChannelList();
           }
         });
       })();
 
       // --- [로비 & 채널 로직] ---
-      
-      // 채널 목록 불러오기
       async function loadChannelList() {
         const listDiv = document.getElementById('channel-list');
         listDiv.innerHTML = '<div style="text-align:center; padding:20px;">공대 목록을 불러오는 중...</div>';
-        
         try {
-          // 'raid_channels' 컬렉션에서 모든 문서 가져오기
           const querySnapshot = await getDocs(collection(db, 'artifacts', ROOT_APP_ID, 'public', 'data', 'raid_channels'));
-          
           if(querySnapshot.empty) {
              listDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">생성된 공대가 없습니다.<br>아래 버튼을 눌러 첫 공대를 만들어보세요!</div>';
              return;
           }
-
           let html = '';
           querySnapshot.forEach((doc) => {
             const data = doc.data();
@@ -534,51 +558,30 @@
         }
       }
 
-      window.openCreateModal = function() {
-        document.getElementById('create-channel-modal').style.display = 'flex';
-      }
-
+      window.openCreateModal = function() { document.getElementById('create-channel-modal').style.display = 'flex'; }
       window.createNewChannel = async function() {
         const name = document.getElementById('new-ch-name').value.trim();
         const pw = document.getElementById('new-ch-pw').value.trim();
         const key = document.getElementById('master-key-input').value.trim();
-
         if(!name || !pw) return alert('공대 이름과 비밀번호를 입력해주세요.');
-        if(key !== MASTER_CREATION_KEY) return alert('마스터 키(승인 암호)가 일치하지 않습니다.\n관리자에게 문의하세요.');
-
-        const newId = 'raid_' + Date.now(); // 유니크 ID 생성
-        
+        if(key !== MASTER_CREATION_KEY) return alert('마스터 키(승인 암호)가 일치하지 않습니다.');
+        const newId = 'raid_' + Date.now();
         try {
           const docRef = doc(db, 'artifacts', ROOT_APP_ID, 'public', 'data', 'raid_channels', newId);
-          await setDoc(docRef, {
-            name: name,
-            password: pw,
-            // 초기 데이터 세팅
-            records: JSON.stringify(initialAppData),
-            pool: JSON.stringify([]),
-            members: JSON.stringify([])
-          });
-          
-          alert(`[${name}] 공대가 생성되었습니다!\n이제 목록에서 접속할 수 있습니다.`);
+          await setDoc(docRef, { name: name, password: pw, records: JSON.stringify(initialAppData), pool: JSON.stringify([]), members: JSON.stringify([]) });
+          alert(`[${name}] 공대가 생성되었습니다!`);
           document.getElementById('create-channel-modal').style.display = 'none';
           loadChannelList();
-        } catch(e) {
-          alert('생성 실패: ' + e.message);
-        }
+        } catch(e) { alert('생성 실패: ' + e.message); }
       }
 
       window.enterChannel = async function(id, truePw, name) {
         const inputPw = prompt(`[${name}] 공대에 접속하려면\n채널 비밀번호를 입력하세요:`);
         if(inputPw !== truePw) return alert('비밀번호가 틀렸습니다.');
-
-        window.currentChannelId = id; // 접속한 채널 ID 저장
+        window.currentChannelId = id;
         document.getElementById('login-channel-name').innerText = name + " 로그인";
-        document.getElementById('app-guild-name').innerText = name; // 앱 상단 제목 변경
-        
-        // 해당 채널의 데이터 실시간 리스너 연결
+        document.getElementById('app-guild-name').innerText = name;
         setupChannelListener(id);
-        
-        // 화면 전환: 로비 -> 로그인
         document.getElementById('lobby-view').style.display = 'none';
         document.getElementById('login-view').style.display = 'flex';
       }
@@ -596,19 +599,10 @@
         });
       }
 
-      // --- [저장 로직 (현재 접속한 채널에 저장)] ---
       window.saveAllData = async function() {
         if(!window.currentChannelId) return;
-        
         const docRef = doc(db, 'artifacts', ROOT_APP_ID, 'public', 'data', 'raid_channels', window.currentChannelId);
-        // 기존 이름과 비번은 유지하면서 데이터만 업데이트하기 위해 merge 옵션 사용 (하지만 setDoc 구조상 필드만 보내도 됨)
-        // 여기서는 안전하게 전체 구조에 맞춰 업데이트
-        await setDoc(docRef, {
-          records: JSON.stringify(window.appData),
-          pool: JSON.stringify(window.allMembers),
-          members: JSON.stringify(window.localMembers)
-        }, { merge: true }); // merge: true 중요 (이름/비번 날아가지 않게)
-        
+        await setDoc(docRef, { records: JSON.stringify(window.appData), pool: JSON.stringify(window.allMembers), members: JSON.stringify(window.localMembers) }, { merge: true });
         document.getElementById('save-toast').classList.add('show');
         setTimeout(()=>document.getElementById('save-toast').classList.remove('show'), 2000);
       }
@@ -620,115 +614,549 @@
             if(document.getElementById('lo-tb')) renLo();
             if(document.getElementById('en-tb')) renEn();
             if(document.getElementById('ch-tb')) renCh();
-            if(document.getElementById('dist-layout')) renderDistStatus();
+            // NEW: 정산 화면 갱신
+            if(document.getElementById('raid-session-list')) renderRaidSessions();
         }
+      }
+
+      // --- [NEW: 고급 분배 시스템] ---
+      
+      window.openAdvancedDistribution = function() {
+        const h = `
+          <div id="dist-main-view">
+             <div style="margin-bottom:20px; text-align:right;">
+                ${window.isAdmin ? `<button class="form-submit-btn" style="width:auto; padding:10px 20px;" onclick="openCreateRaidSession()">+ 정산 회차 생성 (Raid Open)</button>` : ''}
+             </div>
+             <div id="raid-session-list"></div>
+          </div>
+        `;
+        showContent('💰 통합 정산 시스템', h);
+        renderRaidSessions();
+      }
+
+      window.renderRaidSessions = function() {
+        const c = document.getElementById('raid-session-list');
+        if(!c) return;
+        
+        const raids = window.appData.raidSessions || [];
+        if(raids.length === 0) {
+            c.innerHTML = '<div style="text-align:center; padding:40px; color:#999;">진행 중인 정산 내역이 없습니다.<br>관리자가 정산 회차를 생성해야 합니다.</div>';
+            return;
+        }
+
+        c.innerHTML = raids.map((raid, idx) => {
+            // 정산 계산
+            let totalIncome = 0;
+            let totalDistributed = 0;
+            raid.items.forEach(item => {
+                totalIncome += item.netIncome; // 수수료 뗀 순수익
+                totalDistributed += item.finalPot; // 분배 대상 금액
+            });
+            const unsoldCnt = raid.items.filter(i => !i.isSold).length;
+
+            return `
+            <div class="raid-card">
+               <div class="raid-card-header">
+                  <div>
+                    <span class="raid-title">${raid.name}</span> <span style="font-size:12px;color:#888;">(${raid.date})</span>
+                  </div>
+                  <span class="raid-status ${raid.closed ? 'status-closed' : 'status-open'}">${raid.closed ? '정산 마감' : '정산 진행중'}</span>
+               </div>
+               <div class="raid-stat-box">
+                  <div class="stat-item">참여<br><span style="color:#333;font-weight:bold;">${raid.members.length}명</span></div>
+                  <div class="stat-item">등록 물품<br><span style="color:#333;font-weight:bold;">${raid.items.length}개</span></div>
+                  <div class="stat-item">미판매<br><span style="color:${unsoldCnt>0?'red':'#999'};font-weight:bold;">${unsoldCnt}개</span></div>
+               </div>
+               <div style="display:flex; gap:10px;">
+                  <button class="action-btn btn-info" style="flex:1; padding:10px;" onclick="viewRaidDetail(${idx})">정산 상세 내역 보기</button>
+                  ${window.isAdmin ? `<button class="action-btn btn-del" style="width:40px;" onclick="deleteRaidSession(${idx})">×</button>` : ''}
+               </div>
+            </div>`;
+        }).join('');
+      }
+
+      // 회차 생성 모달 열기
+      window.openCreateRaidSession = function() {
+         const today = getTodayStr();
+         
+         // 1. 초기 선택 인원: 현재 파티원(localMembers)을 기본으로 선택
+         window.newRaidSelectedMembers = window.localMembers.map(m => m[0]); // 닉네임만 추출
+
+         const h = `
+           <div class="form-group">
+              <label class="form-label">회차 이름</label>
+              <input type="text" id="rs-name" class="form-control" value="혼테일 정규공대">
+           </div>
+           <div class="form-group">
+              <label class="form-label">날짜</label>
+              <input type="date" id="rs-date" class="form-control" value="${today}">
+           </div>
+           
+           <!-- 참여 인원 선택 (전체 인원에서 선택) -->
+           <div class="form-group">
+              <label class="form-label">참여 인원 선택 (클릭하여 선택/해제)</label>
+              <div id="select-member-pool" class="select-member-pool"></div>
+           </div>
+
+           <!-- 패널티/지분 설정 (선택된 인원만 표시) -->
+           <div class="form-group">
+              <label class="form-label">패널티/지분 설정</label>
+              <div id="penalty-config-area" style="max-height:200px; overflow-y:auto; border:1px solid #eee; padding:10px; border-radius:8px; background:#fafafa;">
+                 <!-- 동적으로 생성됨 -->
+              </div>
+              <p style="font-size:11px; color:#888; margin-top:5px;">* 이 설정은 해당 회차 동안 변하지 않습니다. 직접 입력 가능.</p>
+           </div>
+           <button class="form-submit-btn" onclick="submitRaidSession()">회차 생성 및 명부 확정</button>
+         `;
+         showContent('🆕 정산 회차 생성', h);
+         renderCreateSessionMembers();
+      }
+
+      // 회차 생성창의 멤버 렌더링
+      window.renderCreateSessionMembers = function() {
+          // 1. 멤버 풀 렌더링
+          const poolDiv = document.getElementById('select-member-pool');
+          if(poolDiv) {
+              poolDiv.innerHTML = window.allMembers.map(m => {
+                  const isSelected = window.newRaidSelectedMembers.includes(m.nick);
+                  return `<div class="select-chip ${isSelected ? 'selected' : ''}" onclick="toggleRaidMember('${m.nick}')">${m.nick}</div>`;
+              }).join('');
+          }
+
+          // 2. 패널티 설정 영역 렌더링 (선택된 멤버만)
+          const configDiv = document.getElementById('penalty-config-area');
+          if(configDiv) {
+              if (window.newRaidSelectedMembers.length === 0) {
+                  configDiv.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">선택된 인원이 없습니다.</div>';
+                  return;
+              }
+              
+              configDiv.innerHTML = window.newRaidSelectedMembers.map((nick, i) => {
+                  // 해당 닉네임의 직업 정보 찾기
+                  const memberInfo = window.allMembers.find(m => m.nick === nick);
+                  const job = memberInfo ? memberInfo.job : '알수없음';
+
+                  return `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; background:#fff; padding:6px; border-radius:6px; border:1px solid #eee;">
+                       <span style="font-weight:bold; font-size:13px;">${nick} <span style="font-weight:normal;color:#888;font-size:11px;">(${job})</span></span>
+                       <div class="share-control">
+                          <input type="number" id="penalty-${i}" class="share-input" step="0.01" value="1.0" data-nick="${nick}" data-job="${job}">
+                          <select class="share-select" onchange="document.getElementById('penalty-${i}').value=this.value">
+                             <option value="1.0" selected>정상 (1.0)</option>
+                             <optgroup label="인센티브 (경험치)">
+                                <option value="1.01">+1% (1.01)</option>
+                                <option value="1.02">+2% (1.02)</option>
+                                <option value="1.03">+3% (1.03)</option>
+                                <option value="1.04">+4% (1.04)</option>
+                                <option value="1.05">공대장 (1.05)</option>
+                             </optgroup>
+                             <optgroup label="패널티 (차감)">
+                                <option value="0.9">10% 차감 (0.9)</option>
+                                <option value="0.8">20% 차감 (0.8)</option>
+                                <option value="0.7">30% 차감 (0.7)</option>
+                                <option value="0.6">40% 차감 (0.6)</option>
+                                <option value="0.5">50% 차감 (0.5)</option>
+                                <option value="0.4">60% 차감 (0.4)</option>
+                                <option value="0.3">70% 차감 (0.3)</option>
+                                <option value="0.2">80% 차감 (0.2)</option>
+                                <option value="0.1">90% 차감 (0.1)</option>
+                                <option value="0.0">분배 제외 (0.0)</option>
+                             </optgroup>
+                             <option value="">직접입력</option>
+                          </select>
+                       </div>
+                    </div>`;
+              }).join('');
+          }
+      }
+
+      window.toggleRaidMember = function(nick) {
+          const idx = window.newRaidSelectedMembers.indexOf(nick);
+          if (idx > -1) {
+              window.newRaidSelectedMembers.splice(idx, 1);
+          } else {
+              window.newRaidSelectedMembers.push(nick);
+          }
+          renderCreateSessionMembers();
+      }
+
+      window.submitRaidSession = function() {
+         const name = document.getElementById('rs-name').value;
+         const date = document.getElementById('rs-date').value;
+         
+         if (window.newRaidSelectedMembers.length === 0) return alert('참여 인원을 최소 1명 이상 선택해주세요.');
+
+         // 명부 확정 (스냅샷)
+         // DOM에서 입력된 지분 값을 읽어와야 함
+         const members = window.newRaidSelectedMembers.map((nick, i) => {
+             const input = document.getElementById(`penalty-${i}`);
+             return {
+                 nick: nick,
+                 job: input.dataset.job,
+                 share: parseFloat(input.value) || 0
+             };
+         });
+
+         if(!window.appData.raidSessions) window.appData.raidSessions = [];
+         window.appData.raidSessions.unshift({
+             id: 'rs_' + Date.now(),
+             name: name,
+             date: date,
+             members: members,
+             items: [], // 판매 아이템들
+             payouts: [], // [복구된 기능] 개별 지급 로그
+             closed: false
+         });
+         
+         saveAllData();
+         openAdvancedDistribution();
+      }
+
+      window.deleteRaidSession = function(idx) {
+          if(confirm('이 회차의 모든 정산 기록이 삭제됩니다. 정말 삭제하시겠습니까?')){
+              window.appData.raidSessions.splice(idx, 1);
+              saveAllData();
+              renderRaidSessions();
+          }
+      }
+
+      // --- [회차 상세 보기 & 아이템 추가] ---
+      window.viewRaidDetail = function(idx) {
+          const raid = window.appData.raidSessions[idx];
+          if(!raid.payouts) raid.payouts = []; // 구버전 데이터 호환
+          window.currentRaidId = idx;
+
+          // 총 지분 합계
+          const totalShares = raid.members.reduce((sum, m) => sum + m.share, 0);
+
+          let h = `
+          <div style="display:flex; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
+             <div><b style="font-size:16px;">${raid.name}</b> <span style="color:#888; font-size:12px;">(${raid.date})</span></div>
+             <button class="action-btn btn-outline" onclick="openAdvancedDistribution()">목록으로</button>
+          </div>
+          
+          <!-- 아이템 목록 -->
+          <div style="margin-bottom:20px;">
+             <h4 style="margin:0 0 10px 0;">📦 판매/수입 내역</h4>
+             ${window.isAdmin ? `<button class="form-submit-btn" style="margin-bottom:10px; font-size:12px; padding:8px;" onclick="openAddItemModal(${idx})">+ 아이템/수입 등록</button>` : ''}
+             
+             <div class="table-wrapper">
+               <table class="record-table">
+                  <thead><tr><th>품목</th><th>판매가</th><th>순수익</th><th>공제/인센</th><th>N빵 금액</th><th>상태</th><th>관리</th></tr></thead>
+                  <tbody>
+                    ${raid.items.map((item, iIdx) => {
+                        const deduction = (item.referral?.amount || 0) + (item.incentive?.amount || 0);
+                        return `<tr>
+                          <td>${item.name}</td>
+                          <td>${item.price.toLocaleString()}</td>
+                          <td style="color:#1890ff">${item.netIncome.toLocaleString()}</td>
+                          <td style="color:#ff4d4f">-${deduction.toLocaleString()}</td>
+                          <td style="font-weight:bold;">${Math.floor(item.finalPot / totalShares).toLocaleString()}</td>
+                          <td>${item.isSold ? '<span style="color:#52c41a">정산완료</span>' : '<span style="color:red">미판매</span>'}</td>
+                          <td>${window.isAdmin ? `<button class="action-btn btn-del" onclick="delRaidItem(${idx}, ${iIdx})">×</button>` : '-'}</td>
+                        </tr>`;
+                    }).join('') || '<tr><td colspan="7" class="record-empty">등록된 아이템이 없습니다.</td></tr>'}
+                  </tbody>
+               </table>
+             </div>
+          </div>
+
+          <!-- 개인별 정산표 & 지급 관리 -->
+          <div>
+             <h4 style="margin:0 0 10px 0;">💰 개인별 최종 수령액 및 지급 관리</h4>
+             <div class="table-wrapper" style="max-height:300px; overflow-y:auto;">
+               <table class="record-table">
+                  <thead><tr><th>닉네임</th><th>지분</th><th>최종수령액</th><th>기지급액</th><th>잔액</th><th>관리</th></tr></thead>
+                  <tbody>
+                    ${raid.members.map(m => {
+                        // 1. 수령액 계산
+                        let basePayout = 0;
+                        let extraPayout = 0;
+                        
+                        raid.items.forEach(item => {
+                            if(!item.isSold) return;
+                            const shareVal = item.finalPot / totalShares;
+                            basePayout += Math.floor(shareVal * m.share);
+                            if(item.referral?.active && item.referral.to === m.nick) extraPayout += item.referral.amount;
+                            if(item.incentive?.active && item.incentive.to === m.nick) extraPayout += item.incentive.amount;
+                        });
+                        const totalDue = basePayout + extraPayout;
+
+                        // 2. 기지급액 계산
+                        const paidAmount = raid.payouts
+                            .filter(p => p.to === m.nick)
+                            .reduce((sum, p) => sum + p.amount, 0);
+                        
+                        const balance = totalDue - paidAmount;
+
+                        return `<tr>
+                          <td style="font-weight:bold;">${m.nick}</td>
+                          <td><span style="font-size:11px; background:#f0f0f0; padding:2px 5px; border-radius:4px;">${m.share}</span></td>
+                          <td style="font-weight:800; color:#ff6b00;">${totalDue.toLocaleString()}</td>
+                          <td style="color:#1890ff">${paidAmount > 0 ? paidAmount.toLocaleString() : '-'}</td>
+                          <td style="font-weight:bold; color:${balance > 0 ? '#ff4d4f' : '#ccc'}">${balance.toLocaleString()}</td>
+                          <td>
+                            ${window.isAdmin && balance !== 0 ? 
+                                `<button class="action-btn btn-pay" onclick="setRaidPayoutTarget('${m.nick}', ${balance})">정산</button>` : 
+                                (balance === 0 && totalDue > 0 ? '완료' : '-')
+                            }
+                          </td>
+                        </tr>`;
+                    }).join('')}
+                  </tbody>
+               </table>
+             </div>
+          </div>
+
+          <!-- [복구된 기능] 지급 처리 패널 -->
+          <div class="payout-panel">
+             <div class="payout-title">💸 지급 처리</div>
+             <div class="form-row">
+                <input type="text" id="pay-target-nick" class="form-control" placeholder="닉네임 (정산 버튼 클릭)" readonly style="width:120px; background:#f9f9f9;">
+                <input type="number" id="pay-target-amt" class="form-control" placeholder="지급할 금액" style="flex:1;">
+                <button class="form-submit-btn" style="width:100px; margin-top:0;" onclick="submitRaidPayout(${idx})">지급 확정</button>
+             </div>
+             
+             <!-- 지급 로그 -->
+             <div style="margin-top:15px; border-top:1px solid #eee; padding-top:10px;">
+                <div style="font-size:12px; font-weight:bold; color:#666; margin-bottom:5px;">📋 최근 지급 내역</div>
+                <div style="max-height:150px; overflow-y:auto;">
+                    <table class="record-table" style="font-size:11px;">
+                        ${raid.payouts.length > 0 ? 
+                            raid.payouts.slice().reverse().map((log, pIdx) => `
+                                <tr>
+                                    <td style="color:#999;">${log.date}</td>
+                                    <td><b>${log.to}</b>님에게</td>
+                                    <td style="color:#1890ff; font-weight:bold;">${log.amount.toLocaleString()}</td>
+                                    <td>지급완료</td>
+                                    <td>${window.isAdmin ? `<button class="action-btn btn-del" onclick="deleteRaidPayout(${idx}, ${raid.payouts.length - 1 - pIdx})">×</button>` : ''}</td>
+                                </tr>
+                            `).join('') : '<tr><td colspan="5" style="text-align:center; color:#ccc;">지급 내역이 없습니다.</td></tr>'
+                        }
+                    </table>
+                </div>
+             </div>
+          </div>
+          `;
+          showContent('🧾 정산 상세 내역', h);
+      }
+
+      // 지급 대상 설정 (정산 버튼 클릭 시)
+      window.setRaidPayoutTarget = function(nick, balance) {
+          document.getElementById('pay-target-nick').value = nick;
+          document.getElementById('pay-target-amt').value = balance;
+      }
+
+      // 지급 확정 처리
+      window.submitRaidPayout = function(raidIdx) {
+          const nick = document.getElementById('pay-target-nick').value;
+          const amt = parseInt(document.getElementById('pay-target-amt').value);
+
+          if (!nick || !amt || amt === 0) return alert('지급 대상과 금액을 확인해주세요.');
+
+          const raid = window.appData.raidSessions[raidIdx];
+          if (!raid.payouts) raid.payouts = [];
+
+          raid.payouts.push({
+              date: new Date().toLocaleString(),
+              to: nick,
+              amount: amt
+          });
+
+          saveAllData();
+          viewRaidDetail(raidIdx); // 화면 갱신
+      }
+
+      // 지급 내역 삭제
+      window.deleteRaidPayout = function(raidIdx, pIdx) {
+          if(confirm('이 지급 내역을 취소하시겠습니까? 잔액이 다시 복구됩니다.')) {
+              window.appData.raidSessions[raidIdx].payouts.splice(pIdx, 1);
+              saveAllData();
+              viewRaidDetail(raidIdx);
+          }
+      }
+
+      window.openAddItemModal = function(raidIdx) {
+          const raid = window.appData.raidSessions[raidIdx];
+          const membersOptions = raid.members.map(m => `<option value="${m.nick}">${m.nick}</option>`).join('');
+
+          const h = `
+          <div style="padding:5px;">
+             <div class="form-group">
+                <label class="form-label">아이템 이름</label>
+                <input type="text" id="ai-name" class="form-control" placeholder="예: 알혼목">
+             </div>
+             <div class="form-group">
+                <label class="form-label">판매 금액</label>
+                <input type="number" id="ai-price" class="form-control" placeholder="메소 입력" oninput="calcPreview()">
+             </div>
+             <div class="form-group">
+                <label class="form-label">거래 방식 (수수료)</label>
+                <select id="ai-trade-type" class="form-control" onchange="calcPreview()">
+                   <option value="trade">1:1 교환 (일반)</option>
+                   <option value="trade_99">1:1 교환 (99수작 - 0.8%)</option>
+                   <option value="trade_499">1:1 교환 (499수작 - 1.8%)</option>
+                   <option value="trade_999">1:1 교환 (999수작 - 3%)</option>
+                   <option value="trade_2499">1:1 교환 (2499수작 - 4%)</option>
+                   <option value="parcel">우편 대금청구</option>
+                   <option value="none">수수료 없음 (0%)</option>
+                </select>
+             </div>
+             
+             <!-- 고급 옵션 -->
+             <div class="item-add-box">
+                <div style="font-size:12px; font-weight:bold; color:#ff6b00; margin-bottom:5px;">고급 옵션 (선택)</div>
+                
+                <div class="toggle-option">
+                   <input type="checkbox" id="chk-referral" onchange="toggleOption('referral')">
+                   <div style="flex:1">
+                      <label for="chk-referral" style="font-size:13px; font-weight:bold; cursor:pointer;">소개비/알선비 적용</label>
+                      <div id="opt-referral" style="display:none; margin-top:5px;">
+                         <div class="form-row">
+                             <select id="ref-to" class="form-control" style="font-size:12px;">${membersOptions}</select>
+                             <input type="number" id="ref-amt" class="form-control" placeholder="고정금액" oninput="calcPreview()">
+                         </div>
+                      </div>
+                   </div>
+                </div>
+
+                <div class="toggle-option">
+                   <input type="checkbox" id="chk-incen" onchange="toggleOption('incen')">
+                   <div style="flex:1">
+                      <label for="chk-incen" style="font-size:13px; font-weight:bold; cursor:pointer;">판매 인센티브 (%)</label>
+                      <div id="opt-incen" style="display:none; margin-top:5px;">
+                         <div class="form-row">
+                             <select id="inc-to" class="form-control" style="font-size:12px;">${membersOptions}</select>
+                             <input type="number" id="inc-rate" class="form-control" placeholder="%" value="5" oninput="calcPreview()">
+                         </div>
+                         <div style="font-size:11px; color:#888; margin-top:2px;">* 순수익의 N%가 지급됩니다.</div>
+                      </div>
+                   </div>
+                </div>
+             </div>
+
+             <!-- 계산 미리보기 -->
+             <div style="margin-top:20px; background:#fafafa; padding:15px; border-radius:8px;">
+                <div class="calc-row"><span>판매금액</span> <span id="prev-price">0</span></div>
+                <div class="calc-row"><span>(-) 수수료</span> <span id="prev-tax" class="minus-val">0</span></div>
+                <div class="calc-row" style="border-bottom:1px solid #ddd; padding-bottom:4px; margin-bottom:4px;"><span>(=) 순수익</span> <span id="prev-net" style="font-weight:bold;">0</span></div>
+                
+                <div class="calc-row"><span>(-) 소개비</span> <span id="prev-ref" class="minus-val">0</span></div>
+                <div class="calc-row"><span>(-) 인센티브</span> <span id="prev-inc" class="minus-val">0</span></div>
+                
+                <div class="calc-row final"><span>💰 최종 분배 파이</span> <span id="prev-final">0</span></div>
+             </div>
+             
+             <button class="form-submit-btn" onclick="submitRaidItem(${raidIdx})">등록하기</button>
+          </div>
+          `;
+          showContent('📦 아이템 등록', h);
+      }
+
+      window.getFee = function(amount, type) {
+          if (type === 'none') return 0;
+          if (type === 'trade_99') return Math.floor(amount * 0.008);
+          if (type === 'trade_499') return Math.floor(amount * 0.018);
+          if (type === 'trade_999') return Math.floor(amount * 0.03);
+          if (type === 'trade_2499') return Math.floor(amount * 0.04);
+          
+          let rate = 0;
+          if (type === 'trade') {
+             if(amount >= 100000000) rate = 0.06;
+             else if(amount >= 25000000) rate = 0.05;
+             else if(amount >= 10000000) rate = 0.04;
+             else if(amount >= 5000000) rate = 0.03;
+             else if(amount >= 1000000) rate = 0.018;
+             else if(amount >= 100000) rate = 0.008;
+          } else if (type === 'parcel') {
+             if(amount >= 100000000) rate = 0.07;
+             else if(amount >= 25000000) rate = 0.06;
+             else if(amount >= 10000000) rate = 0.05;
+             else if(amount >= 5000000) rate = 0.04;
+             else if(amount >= 1000000) rate = 0.027;
+             else if(amount >= 100000) rate = 0.012;
+          }
+          return Math.floor(amount * rate);
+      }
+
+      window.toggleOption = function(type) {
+          const chk = document.getElementById(type === 'referral' ? 'chk-referral' : 'chk-incen');
+          const div = document.getElementById(type === 'referral' ? 'opt-referral' : 'opt-incen');
+          div.style.display = chk.checked ? 'block' : 'none';
+          calcPreview();
+      }
+
+      window.calcPreview = function() {
+          const price = parseInt(document.getElementById('ai-price').value) || 0;
+          const tradeType = document.getElementById('ai-trade-type').value;
+          
+          const tax = getFee(price, tradeType);
+          const net = price - tax;
+
+          let refAmt = 0;
+          if(document.getElementById('chk-referral').checked) {
+              refAmt = parseInt(document.getElementById('ref-amt').value) || 0;
+          }
+
+          let incAmt = 0;
+          if(document.getElementById('chk-incen').checked) {
+              const rate = parseFloat(document.getElementById('inc-rate').value) || 0;
+              incAmt = Math.floor(net * (rate / 100)); // 순수익 기준 %
+          }
+
+          const final = net - refAmt - incAmt;
+
+          document.getElementById('prev-price').innerText = price.toLocaleString();
+          document.getElementById('prev-tax').innerText = '-' + tax.toLocaleString();
+          document.getElementById('prev-net').innerText = net.toLocaleString();
+          document.getElementById('prev-ref').innerText = refAmt > 0 ? '-' + refAmt.toLocaleString() : '0';
+          document.getElementById('prev-inc').innerText = incAmt > 0 ? '-' + incAmt.toLocaleString() : '0';
+          document.getElementById('prev-final').innerText = final.toLocaleString();
+          
+          return { price, net, refAmt, incAmt, final };
+      }
+
+      window.submitRaidItem = function(raidIdx) {
+          const name = document.getElementById('ai-name').value;
+          if(!name) return alert('아이템 이름을 입력하세요.');
+          
+          const vals = calcPreview();
+          if(vals.price <= 0) return alert('금액을 입력하세요.');
+
+          const newItem = {
+              name: name,
+              price: vals.price,
+              netIncome: vals.net,
+              finalPot: vals.final,
+              isSold: true, // 등록 즉시 판매된 것으로 간주 (나중에 미판매 기능 확장 가능)
+              referral: {
+                  active: document.getElementById('chk-referral').checked,
+                  to: document.getElementById('ref-to').value,
+                  amount: vals.refAmt
+              },
+              incentive: {
+                  active: document.getElementById('chk-incen').checked,
+                  to: document.getElementById('inc-to').value,
+                  rate: parseFloat(document.getElementById('inc-rate').value) || 0,
+                  amount: vals.incAmt
+              }
+          };
+
+          window.appData.raidSessions[raidIdx].items.push(newItem);
+          saveAllData();
+          viewRaidDetail(raidIdx); // 상세 화면으로 복귀
+      }
+
+      window.delRaidItem = function(rIdx, iIdx) {
+          if(confirm('이 항목을 삭제하시겠습니까?')) {
+              window.appData.raidSessions[rIdx].items.splice(iIdx, 1);
+              saveAllData();
+              viewRaidDetail(rIdx);
+          }
       }
 
       // --- [기존 기능들 (유지)] ---
       
-      /* [분배금 관리] */
-      window.openDistributionHistory = function() {
-        if(!window.appData.distribution) window.appData.distribution = [];
-        if(!window.appData.payouts) window.appData.payouts = [];
-        const d = getTodayStr();
-        let html = `
-        <div id="dist-layout" class="dist-layout">
-          <div class="dist-panel">
-            <div class="dist-title">💰 수입 등록</div>
-            ${window.isAdmin ? `
-            <div class="form-group">
-              <div class="form-row" style="margin-bottom:8px">
-                <input type="date" id="ds-d" class="form-control" value="${d}" style="width:130px">
-                <input type="text" id="ds-item" class="form-control" placeholder="품목" style="flex:1">
-              </div>
-              <div class="form-row" style="margin-bottom:8px">
-                <input type="number" id="ds-amt" class="form-control" placeholder="금액" oninput="calcDistFee()" style="flex:1">
-                <select id="ds-type" class="form-control" onchange="calcDistFee()" style="width:140px">
-                  <option value="trade">일반</option><option value="99">99수작</option><option value="499">499수작</option>
-                  <option value="999">999수작</option><option value="2499">2499수작</option><option value="parcel">택배</option>
-                </select>
-              </div>
-              <div class="form-row" style="margin-bottom:12px">
-                <label style="font-size:13px; font-weight:bold;">순수익:</label>
-                <input type="text" id="ds-net" class="form-control" readonly style="flex:1; text-align:right; font-weight:bold; color:#ff6b00;">
-              </div>
-              <label class="form-label">분배 대상 (<span id="sel-count">0</span>명)</label>
-              <div id="dist-member-pool" class="dist-member-pool"></div>
-              <button class="form-submit-btn" onclick="addDistIncome()">등록</button>
-            </div>
-            ` : '<div style="text-align:center;color:#999;padding:20px;">관리자 전용</div>'}
-          </div>
-          <div class="dist-panel">
-            <div class="dist-title">📊 정산 현황</div>
-            <div class="table-wrapper"><table class="record-table"><thead><tr><th>이름</th><th>총분배</th><th>지급됨</th><th>잔액</th><th>관리</th></tr></thead><tbody id="dist-status-tb"></tbody></table></div>
-          </div>
-          <div class="dist-panel">
-            <div class="dist-title">💸 지급 처리</div>
-            ${window.isAdmin ? `
-            <div class="form-group"><div class="form-row">
-                <input type="date" id="pay-d" class="form-control" value="${d}" style="width:120px">
-                <input type="text" id="pay-to" class="form-control" placeholder="대상" style="width:80px">
-                <input type="number" id="pay-amt" class="form-control" placeholder="금액" style="flex:1">
-                <button class="action-btn btn-edit" onclick="addDistPayout()">지급</button>
-            </div></div>` : ''}
-            <div style="font-size:12px;margin-top:10px;">로그</div>
-            <div style="max-height:200px;overflow-y:auto;border:1px solid #eee;"><table class="record-table"><tbody id="dist-log-tb"></tbody></table></div>
-          </div>
-        </div>`;
-        showContent('💰 분배금 관리', html);
-        if(window.isAdmin) renderDistMemberPool();
-        renderDistStatus();
-      }
-
-      window.calcDistFee = function() {
-        const amt = parseInt(document.getElementById('ds-amt').value)||0; const type = document.getElementById('ds-type').value; let rate=0;
-        if(type==='trade'){ if(amt>=100000000)rate=0.06; else if(amt>=25000000)rate=0.05; else if(amt>=10000000)rate=0.04; else if(amt>=5000000)rate=0.03; else if(amt>=1000000)rate=0.018; else if(amt>=100000)rate=0.008; }
-        else if(type==='parcel'){ if(amt>=100000000)rate=0.07; else if(amt>=25000000)rate=0.06; else if(amt>=10000000)rate=0.05; else if(amt>=5000000)rate=0.04; else if(amt>=1000000)rate=0.027; else if(amt>=100000)rate=0.012; }
-        else { if(type==='99')rate=0.008; else if(type==='499')rate=0.018; else if(type==='999')rate=0.03; else if(type==='2499')rate=0.04; }
-        const net = amt - Math.floor(amt*rate);
-        document.getElementById('ds-net').value = net.toLocaleString(); document.getElementById('ds-net').dataset.val = net;
-      }
-      window.renderDistMemberPool = function() {
-        const c=document.getElementById('dist-member-pool'); if(!c)return;
-        c.innerHTML = window.allMembers.map(m=>`<div class="dist-chip ${window.selectedDistMembers.includes(m.nick)?'selected':''}" onclick="toggleDistTarget('${m.nick}')">${m.nick}</div>`).join('');
-        document.getElementById('sel-count').innerText = window.selectedDistMembers.length;
-      }
-      window.toggleDistTarget = function(n) { const i=window.selectedDistMembers.indexOf(n); if(i>-1)window.selectedDistMembers.splice(i,1); else window.selectedDistMembers.push(n); renderDistMemberPool(); }
-      window.addDistIncome = function() {
-        const d=document.getElementById('ds-d').value, item=document.getElementById('ds-item').value, amt=document.getElementById('ds-amt').value, net=document.getElementById('ds-net').dataset.val;
-        if(!item||!amt) return alert('입력 확인'); if(window.selectedDistMembers.length===0) return alert('대상 선택');
-        window.appData.distribution.unshift({date:d, item:item, amt:amt, net:parseInt(net), targets:[...window.selectedDistMembers]});
-        window.selectedDistMembers=[]; saveAllData(); renderDistMemberPool(); renderDistStatus();
-      }
-      window.addDistPayout = function() {
-        const d=document.getElementById('pay-d').value, to=document.getElementById('pay-to').value, amt=document.getElementById('pay-amt').value;
-        if(!to||!amt) return alert('확인');
-        window.appData.payouts.unshift({date:d, to:to, amt:parseInt(amt)}); document.getElementById('pay-amt').value=''; saveAllData(); renderDistStatus();
-      }
-      window.setPayTarget = function(n,b) { document.getElementById('pay-to').value=n; document.getElementById('pay-amt').value=b>0?b:''; }
-      window.renderDistStatus = function() {
-        const bal={}; window.allMembers.forEach(m=>bal[m.nick]={e:0,p:0});
-        window.appData.distribution.forEach(d=>{ if(d.targets&&d.targets.length){ const s=Math.floor(d.net/d.targets.length); d.targets.forEach(n=>{ if(!bal[n])bal[n]={e:0,p:0}; bal[n].e+=s; }); }});
-        window.appData.payouts.forEach(p=>{ if(!bal[p.to])bal[p.to]={e:0,p:0}; bal[p.to].p+=p.amt; });
-        const tb=document.getElementById('dist-status-tb');
-        if(tb) {
-            tb.innerHTML = Object.keys(bal).sort().map(n=>{
-                const b=bal[n], r=b.e-b.p; if(b.e===0&&b.p===0)return '';
-                const btn = window.isAdmin&&r>0 ? `<button class="action-btn btn-pay" onclick="setPayTarget('${n}',${r})">정산</button>` : '-';
-                return `<tr><td>${n}</td><td style="color:#1890ff">+${b.e.toLocaleString()}</td><td style="color:#555">-${b.p.toLocaleString()}</td><td style="font-weight:bold;color:${r>0?'#ff6b00':'#bbb'}">${r.toLocaleString()}</td><td>${btn}</td></tr>`;
-            }).join('') || '<tr><td colspan="5" class="record-empty">내역 없음</td></tr>';
-        }
-        const lb=document.getElementById('dist-log-tb');
-        if(lb) {
-            const logs=[]; 
-            window.appData.distribution.forEach((d,i)=>logs.push({d:d.date,m:`[수입] ${d.item} (${d.net.toLocaleString()})`,t:'inc',i:i}));
-            window.appData.payouts.forEach((p,i)=>logs.push({d:p.date,m:`[지급] ${p.to} ${p.amt.toLocaleString()}`,t:'pay',i:i}));
-            logs.sort((a,b)=>b.d.localeCompare(a.d));
-            lb.innerHTML = logs.slice(0,50).map(l=>`<tr><td style="font-size:11px;color:#888;">${l.d}</td><td style="text-align:left;">${l.m}</td><td>${window.isAdmin?`<button class="action-btn btn-del" onclick="deleteDistLog('${l.t}',${l.i})">×</button>`:''}</td></tr>`).join('');
-        }
-      }
-      window.deleteDistLog = function(t,i){ if(confirm('삭제?')){ if(t==='inc')window.appData.distribution.splice(i,1); else window.appData.payouts.splice(i,1); saveAllData(); renderDistStatus(); }}
-
       /* [기타 카테고리] */
       window.openChannelHistory = () => { showContent('📢 오늘의 채널', `<div class="table-wrapper">${genTable('ch-tb',['날짜','리프레','원정대','관리'])}</div>` + (window.isAdmin?`<div class="form-group"><div class="form-row"><input type="date" id="ch-d" class="form-control" value="${getTodayStr()}"><input type="text" id="ch-v1" class="form-control" placeholder="리프레"><input type="text" id="ch-v2" class="form-control" placeholder="원정대"></div><button class="form-submit-btn" onclick="addCh()">등록</button></div>`:'')); renCh(); }
       window.addCh = () => { window.appData.channel.unshift({date:document.getElementById('ch-d').value, v1:document.getElementById('ch-v1').value, v2:document.getElementById('ch-v2').value}); saveAllData(); renCh(); }
