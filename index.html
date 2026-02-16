@@ -826,9 +826,6 @@
           if(!raid.payouts) raid.payouts = []; // 구버전 데이터 호환
           window.currentRaidId = idx;
 
-          // 총 지분 합계
-          const totalShares = raid.members.reduce((sum, m) => sum + m.share, 0);
-
           let h = `
           <div style="display:flex; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
              <div><b style="font-size:16px;">${raid.name}</b> <span style="color:#888; font-size:12px;">(${raid.date})</span></div>
@@ -846,12 +843,21 @@
                   <tbody>
                     ${raid.items.map((item, iIdx) => {
                         const deduction = (item.referral?.amount || 0) + (item.incentive?.amount || 0);
+                        
+                        // [NEW] 유효 분배 인원 계산
+                        const targetNicks = item.targetNicks || raid.members.map(m=>m.nick); // 없으면 전원
+                        const itemEffectiveShares = raid.members.reduce((sum, m) => {
+                            if(targetNicks.includes(m.nick)) return sum + m.share;
+                            return sum;
+                        }, 0);
+                        const perShare = itemEffectiveShares > 0 ? Math.floor(item.finalPot / itemEffectiveShares) : 0;
+
                         return `<tr>
-                          <td>${item.name}</td>
+                          <td>${item.name} <span style="font-size:10px; color:#999; display:block;">(${targetNicks.length}명)</span></td>
                           <td>${item.price.toLocaleString()}</td>
-                          <td style="color:#1890ff">${item.netIncome.toLocaleString()}</td>
+                          <td style="color:${item.netIncome >= 0 ? '#1890ff' : '#ff4d4f'}">${item.netIncome.toLocaleString()}</td>
                           <td style="color:#ff4d4f">-${deduction.toLocaleString()}</td>
-                          <td style="font-weight:bold;">${Math.floor(item.finalPot / totalShares).toLocaleString()}</td>
+                          <td style="font-weight:bold;">${perShare.toLocaleString()} <span style="font-size:10px;color:#888;">(1지분당)</span></td>
                           <td>${item.isSold ? '<span style="color:#52c41a">정산완료</span>' : '<span style="color:red">미판매</span>'}</td>
                           <td>${window.isAdmin ? `<button class="action-btn btn-del" onclick="delRaidItem(${idx}, ${iIdx})">×</button>` : '-'}</td>
                         </tr>`;
@@ -875,8 +881,19 @@
                         
                         raid.items.forEach(item => {
                             if(!item.isSold) return;
-                            const shareVal = item.finalPot / totalShares;
-                            basePayout += Math.floor(shareVal * m.share);
+                            
+                            // [NEW] 내가 분배 대상인지 확인
+                            const targetNicks = item.targetNicks || raid.members.map(x=>x.nick);
+                            if(targetNicks.includes(m.nick)) {
+                                // 유효 총 지분 재계산
+                                const itemEffectiveShares = raid.members.reduce((sum, member) => {
+                                    if(targetNicks.includes(member.nick)) return sum + member.share;
+                                    return sum;
+                                }, 0);
+                                const shareVal = itemEffectiveShares > 0 ? item.finalPot / itemEffectiveShares : 0;
+                                basePayout += Math.floor(shareVal * m.share);
+                            }
+
                             if(item.referral?.active && item.referral.to === m.nick) extraPayout += item.referral.amount;
                             if(item.incentive?.active && item.incentive.to === m.nick) extraPayout += item.incentive.amount;
                         });
@@ -987,8 +1004,8 @@
                 <input type="text" id="ai-name" class="form-control" placeholder="예: 알혼목">
              </div>
              <div class="form-group">
-                <label class="form-label">판매 금액</label>
-                <input type="number" id="ai-price" class="form-control" placeholder="메소 입력" oninput="calcPreview()">
+                <label class="form-label">판매 금액 (마이너스 가능)</label>
+                <input type="number" id="ai-price" class="form-control" placeholder="금액 입력 (지출은 -입력)" oninput="calcPreview()">
              </div>
              <div class="form-group">
                 <label class="form-label">거래 방식 (수수료)</label>
@@ -998,7 +1015,7 @@
                    <option value="trade_499">1:1 교환 (499수작 - 1.8%)</option>
                    <option value="trade_999">1:1 교환 (999수작 - 3%)</option>
                    <option value="trade_2499">1:1 교환 (2499수작 - 4%)</option>
-                   <option value="parcel">우편 대금청구</option>
+                   <option value="parcel">우편 대금청구 (+5,000)</option>
                    <option value="none">수수료 없음 (0%)</option>
                 </select>
              </div>
@@ -1035,6 +1052,17 @@
                 </div>
              </div>
 
+             <!-- [NEW] 분배 대상 선택 -->
+             <div class="form-group" style="margin-top:15px;">
+                <label class="form-label">분배 대상 선택 (체크 해제 시 제외)</label>
+                <div class="select-member-pool">
+                    ${raid.members.map((m, i) => `
+                        <div class="select-chip selected" id="chip-target-${i}" onclick="toggleTargetMember(${i})">${m.nick}</div>
+                    `).join('')}
+                </div>
+                <input type="hidden" id="target-indices" value="${raid.members.map((_, i) => i).join(',')}">
+             </div>
+
              <!-- 계산 미리보기 -->
              <div style="margin-top:20px; background:#fafafa; padding:15px; border-radius:8px;">
                 <div class="calc-row"><span>판매금액</span> <span id="prev-price">0</span></div>
@@ -1053,7 +1081,25 @@
           showContent('📦 아이템 등록', h);
       }
 
+      window.toggleTargetMember = function(idx) {
+          const chip = document.getElementById(`chip-target-${idx}`);
+          chip.classList.toggle('selected');
+          
+          // 선택된 인덱스 업데이트
+          const hiddenInput = document.getElementById('target-indices');
+          const currentIndices = hiddenInput.value ? hiddenInput.value.split(',').map(Number) : [];
+          
+          if(chip.classList.contains('selected')) {
+              if(!currentIndices.includes(idx)) currentIndices.push(idx);
+          } else {
+              const removeAt = currentIndices.indexOf(idx);
+              if(removeAt > -1) currentIndices.splice(removeAt, 1);
+          }
+          hiddenInput.value = currentIndices.join(',');
+      }
+
       window.getFee = function(amount, type) {
+          if (amount < 0) return 0; // NEW: 마이너스 금액(지출)은 수수료 없음
           if (type === 'none') return 0;
           if (type === 'trade_99') return Math.floor(amount * 0.008);
           if (type === 'trade_499') return Math.floor(amount * 0.018);
@@ -1068,6 +1114,7 @@
              else if(amount >= 5000000) rate = 0.03;
              else if(amount >= 1000000) rate = 0.018;
              else if(amount >= 100000) rate = 0.008;
+             return Math.floor(amount * rate);
           } else if (type === 'parcel') {
              if(amount >= 100000000) rate = 0.07;
              else if(amount >= 25000000) rate = 0.06;
@@ -1075,6 +1122,8 @@
              else if(amount >= 5000000) rate = 0.04;
              else if(amount >= 1000000) rate = 0.027;
              else if(amount >= 100000) rate = 0.012;
+             // 택배 수수료(%) + 송금 비용 5000원 추가
+             return Math.floor(amount * rate) + 5000;
           }
           return Math.floor(amount * rate);
       }
@@ -1121,7 +1170,14 @@
           if(!name) return alert('아이템 이름을 입력하세요.');
           
           const vals = calcPreview();
-          if(vals.price <= 0) return alert('금액을 입력하세요.');
+          if(vals.price === 0) return alert('금액을 입력하세요 (0원 제외).');
+
+          // [NEW] 선택된 멤버 인덱스 가져오기
+          const raid = window.appData.raidSessions[raidIdx];
+          const targetIndices = document.getElementById('target-indices').value.split(',').map(Number);
+          const targetNicks = targetIndices.map(i => raid.members[i].nick);
+
+          if(targetNicks.length === 0) return alert('분배 대상자를 최소 1명 이상 선택해주세요.');
 
           const newItem = {
               name: name,
@@ -1129,6 +1185,7 @@
               netIncome: vals.net,
               finalPot: vals.final,
               isSold: true, // 등록 즉시 판매된 것으로 간주 (나중에 미판매 기능 확장 가능)
+              targetNicks: targetNicks, // [NEW] 분배 대상 명단 저장
               referral: {
                   active: document.getElementById('chk-referral').checked,
                   to: document.getElementById('ref-to').value,
